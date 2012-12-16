@@ -1,4 +1,4 @@
-package com.vf.wql2parser
+package com.vf.wql2pig
 
 /**
  * User: valeryf

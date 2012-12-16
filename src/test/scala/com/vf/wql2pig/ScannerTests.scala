@@ -1,4 +1,4 @@
-package com.vf.wql2parser
+package com.vf.wql2pig
 
 import org.hamcrest.Matchers.is
 import org.hamcrest.MatcherAssert.assertThat
