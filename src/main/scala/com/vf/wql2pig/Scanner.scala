@@ -7,10 +7,10 @@ package com.vf.wql2pig
 object Scanner {
 
   def isValidChar(ch: Char): Boolean = {
-    ch.isLetterOrDigit || "_".contains(ch)
+    ch.isLetterOrDigit || "_*".contains(ch)
   }
 
-  def isDelimiter(ch: Char): Boolean = " )(\n\t," contains ch
+  def isDelimiter(ch: Char): Boolean = " )(\n\t,;" contains ch
 
   def stringOrNumberToken(chars: List[Char]): Token = {
     chars.forall(ch => ch.isDigit) match {
@@ -34,6 +34,7 @@ object Scanner {
       case '(' :: rest => LeftParen() :: stInit(rest)
       case ')' :: rest => RightParen() :: stInit(rest)
       case '=' :: rest => EqSign() :: stInit(rest)
+      case ';' :: rest => SemiColon() :: stInit(rest)
       case ch :: rest if isDelimiter(ch) => stInit(rest)
       case ch :: rest if isValidChar(ch) => stChar(rest, List(ch))
     }
