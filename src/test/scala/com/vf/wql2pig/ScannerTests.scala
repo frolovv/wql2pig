@@ -26,6 +26,13 @@ class ScannerTests {
         StringToken("and"), StringToken("src"), EqSign(), IntToken(19)))
   )
 
+  val semiColonTests = List(
+    (";;;", List(SemiColon(), SemiColon(), SemiColon()))
+  )
+
+  @Test def runSemiColonTests(){
+    testSamples(semiColonTests)
+  }
 
   @Test def runComplexTests() {
     testSamples(complexTests)

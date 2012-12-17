@@ -11,3 +11,5 @@ case class LeftParen() extends Token
 case class RightParen() extends Token
 
 case class EqSign() extends Token
+
+case class SemiColon() extends Token
