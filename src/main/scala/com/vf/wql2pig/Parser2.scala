@@ -45,16 +45,16 @@ trait WqlStatements extends WqlConstants {
     case relation ~ "=" ~ expr => AssignExpr(relation, expr)
   }
 
-  val oper : Parser[OperExpr] = (((boolean | integer | string) ~ ident ~ ident) | (ident ~ ident ~ (boolean | integer | string))) ^^ {
+  val oper: Parser[OperExpr] = (((boolean | integer | string) ~ ident ~ ident) | (ident ~ ident ~ (boolean | integer | string))) ^^ {
     case x ~ VarExpr(operator) ~ field => OperExpr(operator, x, field)
   }
-  val and : Parser[AndExpr] = (condition ~ "and" ~ condition) ^^ {case cond1 ~ "and" ~ cond2 => AndExpr(cond1, cond2)}
-  val or : Parser[OrExpr] = (condition ~ "or" ~ condition) ^^ {case cond1 ~ "or" ~ cond2 => OrExpr(cond1, cond2)}
-  val condition : Parser[ConditionExpr] = (oper | and | or);
-
-  val where : Parser[AbstractWhereExpr] = "where" ~ condition ^^ => {
-    case "where" ~ cond => WhereExpr(cond)
+  val and: Parser[AndExpr] = ((oper ~ "and" ~ oper) | (condition ~ "and" ~ condition) | (condition ~ "and" ~ condition)) ^^ {
+    case cond1 ~ "and" ~ cond2 => AndExpr(cond1, cond2)
   }
+  val or: Parser[OrExpr] = ((oper ~ "or" ~ oper) | (condition ~ "or" ~ condition)) ^^ {
+    case cond1 ~ "or" ~ cond2 => OrExpr(cond1, cond2)
+  }
+  val condition: Parser[ConditionExpr] = (oper | and | or);
 
   val select: Parser[SelectExpr] = "select" ~ ("*" | ident) ~ "from" ~ ident ^^ {
     case "select" ~ "*" ~ "from" ~ relation => SelectExpr(AllColumnsExpr(), relation, EmptyWhereExpr(), EmptyOrder())
