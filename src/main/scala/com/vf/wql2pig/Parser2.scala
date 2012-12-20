@@ -54,7 +54,7 @@ trait WqlStatements extends WqlConstants {
   val or: Parser[OrExpr] = ((oper ~ "or" ~ oper) | (condition ~ "or" ~ condition)) ^^ {
     case cond1 ~ "or" ~ cond2 => OrExpr(cond1, cond2)
   }
-  val condition: Parser[ConditionExpr] = (oper | and | or);
+  val condition: Parser[ConditionExpr] = (oper | and | or)
 
   val select: Parser[SelectExpr] = "select" ~ ("*" | ident) ~ "from" ~ ident ^^ {
     case "select" ~ "*" ~ "from" ~ relation => SelectExpr(AllColumnsExpr(), relation, EmptyWhereExpr(), EmptyOrder())
