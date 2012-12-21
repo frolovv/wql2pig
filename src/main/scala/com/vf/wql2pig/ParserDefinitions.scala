@@ -47,3 +47,5 @@ case class OrExpr(left : ConditionExpr, right : ConditionExpr) extends Condition
 case class OperExpr(oper: String, left: Expr, right: Expr) extends ConditionExpr
 
 case class JoinExpr(tablesAndColumns : List[(VarExpr, VarExpr)]) extends Expr
+
+case class FilterExpr(relation : VarExpr, conditions : ConditionExpr) extends Expr
