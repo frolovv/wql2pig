@@ -23,7 +23,7 @@ trait WqlConstants extends util.parsing.combinator.RegexParsers {
   val string: Parser[StringExpr] = ("""'""" + """\w*""" + """'""").r ^^ {
     s => StringExpr(unquote(s))
   }
-  val ident: Parser[VarExpr] = ("""[a-zA-Z_=*]\w*""".r | failure("couldn't parse identifier")) ^^ {
+  val ident: Parser[VarExpr] = ("""[a-zA-Z_=*](\w|=)*""".r | failure("couldn't parse identifier")) ^^ {
     s => VarExpr(s)
   }
   val const: Parser[LiteralExpr] = (boolean | integer | string | failure("couldn't parse constant"))
