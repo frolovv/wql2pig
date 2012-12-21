@@ -30,6 +30,7 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
     implicit val parserToTest = this.direction
     parsing("asc") should equal(OrderExpr("asc"))
     parsing("desc") should equal(OrderExpr("desc"))
+    assertFail("ascc")
   }
 
   they should "parse full order statement" in {
@@ -66,6 +67,9 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
     implicit val parserToTest = this.oper
     parsing("x = 3") should equal(OperExpr("=", VarExpr("x"), IntExpr(3)))
     parsing("(x = 3)") should equal(OperExpr("=", VarExpr("x"), IntExpr(3)))
+
+    assertFail("x = 3 x")
+    assertFail("(x = 3")
   }
 
   they should "parse and expressions" in {
