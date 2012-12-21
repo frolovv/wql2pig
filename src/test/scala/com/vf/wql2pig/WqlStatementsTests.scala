@@ -46,6 +46,7 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
     implicit val parserToTest = this.select
     parsing("select * from users") should equal(SelectExpr(ColumnsExpr(List("*")), VarExpr("users"), EmptyWhereExpr(), EmptyOrder()))
     parsing("select evid from users") should equal(SelectExpr(ColumnsExpr(List("evid")), VarExpr("users"), EmptyWhereExpr(), EmptyOrder()))
+    parsing("select evid from users where src = 3") should equal(SelectExpr(ColumnsExpr(List("evid")), VarExpr("users"), WhereExpr(OperExpr("=", VarExpr("src"), IntExpr(3))), EmptyOrder()))
   }
 
   they should "parse simple condition expressions" in {
@@ -71,4 +72,11 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
     parsing("x = 2 and (x = 4 or y = 5)") should equal(AndExpr(OperExpr("=", VarExpr("x"), IntExpr(2)), OrExpr(OperExpr("=", VarExpr("x"), IntExpr(4)), OperExpr("=", VarExpr("y"), IntExpr(5)))))
     parsing("x = 2 and y = 3 and z = 6") should equal(AndExpr(OperExpr("=", VarExpr("x"), IntExpr(2)), AndExpr(OperExpr("=", VarExpr("y"), IntExpr(3)), OperExpr("=", VarExpr("z"), IntExpr(6)))))
   }
+
+  they should "parse where expressions" in {
+    implicit val parserToTest = this.where
+    parsing("where x = 2 or y = 3") should equal(WhereExpr(OrExpr(OperExpr("=", VarExpr("x"), IntExpr(2)), OperExpr("=", VarExpr("y"), IntExpr(3)))))
+    parsing("where (x = 2) or (y = 3)") should equal(WhereExpr(OrExpr(OperExpr("=", VarExpr("x"), IntExpr(2)), OperExpr("=", VarExpr("y"), IntExpr(3)))))
+  }
+
 }
