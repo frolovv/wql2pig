@@ -34,8 +34,19 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
 
   they should "parse full order statement" in {
     implicit val parserToTest = this.order
-    parsing("order users by evid asc") should equal(FullOrderExpr(VarExpr("users"), List((VarExpr("evid"), OrderExpr("asc")))))
-    parsing("order by evid asc") should equal(SelectOrderExpr(List((VarExpr("evid"), OrderExpr("asc")))))
+
+    val evid_asc = (VarExpr("evid"), OrderExpr("asc"))
+    val users = VarExpr("users")
+
+    parsing("order users by evid asc") should equal(FullOrderExpr(users, List(evid_asc)))
+
+    parsing("order by evid asc") should equal(SelectOrderExpr(List(evid_asc)))
+
+    parsing("order by evid asc, date_created desc, src asc") should equal(SelectOrderExpr(
+      List(evid_asc, (VarExpr("date_created"), OrderExpr("desc")), (VarExpr("src"), OrderExpr("asc")))))
+
+    parsing("order users by evid asc, date_created desc, src asc") should equal(FullOrderExpr(users,
+      List(evid_asc, (VarExpr("date_created"), OrderExpr("desc")), (VarExpr("src"), OrderExpr("asc")))))
   }
 
   they should "parse asign statement" in {
