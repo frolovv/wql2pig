@@ -62,7 +62,7 @@ trait WqlStatements extends WqlConstants {
   }
 
   val where: Parser[AbstractWhereExpr] = "where" ~ condition ^^ {
-    case "where" ~ condition => WhereExpr(condition)
+    case "where" ~ cond => WhereExpr(cond)
   }
 
   val select: Parser[SelectExpr] = "select" ~ ident ~ "from" ~ ident ~ opt(where) ^^ {
