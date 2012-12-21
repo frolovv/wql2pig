@@ -36,11 +36,14 @@ trait WqlStatements extends WqlConstants {
     case "desc" => OrderExpr("desc")
   }
 
-  def combine(column: VarExpr, direction: OrderExpr, s: Any): List[(VarExpr, OrderExpr)] = {
-    List((column, direction))
+  def combine(column: VarExpr, direction: OrderExpr, s: List[VarExpr ~ OrderExpr]): List[(VarExpr, OrderExpr)] = {
+    val mapped = s map {
+      case column ~ dir => (column, dir)
+    }
+    (column, direction) :: mapped
   }
 
-  val order: Parser[AbstractOrder] = ("order" ~ ident ~ "by" | "order" ~ "by") ~ ident ~ direction ~ (("," ~ ident ~ direction) *) ^^ {
+  val order: Parser[AbstractOrder] = ("order" ~ ident ~ "by" | "order" ~ "by") ~ ident ~ direction ~ (("," ~> ident ~ direction) *) ^^ {
     case "order" ~ "by" ~ column ~ dir ~ x =>
       SelectOrderExpr(combine(column, dir, x))
     case "order" ~ (relation: VarExpr) ~ "by" ~ column ~ dir ~ x =>
