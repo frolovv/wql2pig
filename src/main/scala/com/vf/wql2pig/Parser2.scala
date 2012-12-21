@@ -23,16 +23,17 @@ trait WqlConstants extends util.parsing.combinator.RegexParsers {
   val string: Parser[StringExpr] = ("""'""" + """\w*""" + """'""").r ^^ {
     s => StringExpr(unquote(s))
   }
-  val ident: Parser[VarExpr] = """[a-zA-Z_]\w*""".r ^^ {
+  val ident: Parser[VarExpr] = ("""[a-zA-Z_=]\w*""".r | failure("couldn't parse identifier")) ^^ {
     s => VarExpr(s)
   }
+  val const: Parser[LiteralExpr] = (boolean | integer | string | failure("couldn't parse constant"))
 }
 
 trait WqlStatements extends WqlConstants {
   // order users by evid desc
-  val simpleOrder: Parser[SimpleOrderExpr] = ("asc" | "desc") ^^ {
-    case "asc" => AscOrder()
-    case "desc" => DescOrder()
+  val simpleOrder: Parser[OrderExpr] = ("asc" | "desc") ^^ {
+    case "asc" => OrderExpr("asc")
+    case "desc" => OrderExpr("desc")
   }
 
   val order: Parser[FullOrderExpr] = "order" ~ ident ~ "by" ~ ident ~ simpleOrder ^^ {
@@ -45,19 +46,23 @@ trait WqlStatements extends WqlConstants {
     case relation ~ "=" ~ expr => AssignExpr(relation, expr)
   }
 
-  val oper: Parser[OperExpr] = (((boolean | integer | string) ~ ident ~ ident) | (ident ~ ident ~ (boolean | integer | string))) ^^ {
-    case x ~ VarExpr(operator) ~ field => OperExpr(operator, x, field)
+  val oper: Parser[OperExpr] = (const ~ ident ~ ident | ident ~ ident ~ const | "(" ~ oper ~ ")") ^^ {
+    case (left: Expr) ~ VarExpr(operator) ~ (right: Expr) => OperExpr(operator, left, right)
+    case "(" ~ (operand: OperExpr) ~ ")" => operand
   }
-  val and: Parser[AndExpr] = ((oper ~ "and" ~ oper) | (condition ~ "and" ~ condition) | (condition ~ "and" ~ condition)) ^^ {
+  val and: Parser[AndExpr] = (oper ~ "and" ~ condition) ^^ {
     case cond1 ~ "and" ~ cond2 => AndExpr(cond1, cond2)
   }
-  val or: Parser[OrExpr] = ((oper ~ "or" ~ oper) | (condition ~ "or" ~ condition)) ^^ {
+  val or: Parser[OrExpr] = (oper ~ "or" ~ condition) ^^ {
     case cond1 ~ "or" ~ cond2 => OrExpr(cond1, cond2)
   }
-  val condition: Parser[ConditionExpr] = (oper | and | or)
+  val condition: Parser[ConditionExpr] = ((and | or | oper) | ("(" ~ condition ~ ")")) ^^ {
+    case cond: ConditionExpr => cond
+    case "(" ~ (cond: ConditionExpr) ~ ")" => cond
+  }
 
   val select: Parser[SelectExpr] = "select" ~ ("*" | ident) ~ "from" ~ ident ^^ {
-    case "select" ~ "*" ~ "from" ~ relation => SelectExpr(AllColumnsExpr(), relation, EmptyWhereExpr(), EmptyOrder())
+    case "select" ~ "*" ~ "from" ~ relation => SelectExpr(ColumnsExpr(List("*")), relation, EmptyWhereExpr(), EmptyOrder())
     case "select" ~ VarExpr(column) ~ "from" ~ relation => SelectExpr(ColumnsExpr(List(column)), relation, EmptyWhereExpr(), EmptyOrder())
   }
 }
