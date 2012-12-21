@@ -54,7 +54,7 @@ trait WqlStatements extends WqlConstants {
     }
   }
 
-  val tableStatement: Parser[Expr] = order | select
+  val tableStatement: Parser[Expr] = order | select | join | filter
 
   val assign: Parser[AssignExpr] = ident ~ "=" ~ tableStatement ^^ {
     case relation ~ "=" ~ expr => AssignExpr(relation, expr)
@@ -70,12 +70,15 @@ trait WqlStatements extends WqlConstants {
   val or: Parser[OrExpr] = (oper ~ "or" ~ condition) ^^ {
     case cond1 ~ "or" ~ cond2 => OrExpr(cond1, cond2)
   }
-  val condition: Parser[ConditionExpr] = ((and | or | oper) | ("(" ~ condition ~ ")")) ^^ {
+  val condition: Parser[ConditionExpr] = ((and | or | oper) | ("(" ~> condition <~ ")")) ^^ {
     case cond: ConditionExpr => cond
-    case "(" ~ (cond: ConditionExpr) ~ ")" => cond
   }
 
   val where: Parser[AbstractWhereExpr] = "where" ~> condition ^^ (cond => WhereExpr(cond))
+
+  val filter: Parser[FilterExpr] = ("filter" ~> ident) ~ ("by" ~> condition) ^^ {
+    case relation ~ conditions => FilterExpr(relation, conditions)
+  }
 
   val select: Parser[SelectExpr] = "select" ~ ident ~ "from" ~ ident ~ opt(where) ~ opt(order) ^^ {
     case "select" ~ VarExpr(column) ~ "from" ~ relation ~ whereStmt ~ orderStmt =>
