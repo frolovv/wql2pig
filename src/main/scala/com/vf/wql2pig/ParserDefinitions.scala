@@ -36,6 +36,8 @@ case class SelectOrderExpr(orders: List[(VarExpr, OrderExpr)]) extends AbstractO
 
 case class FullOrderExpr(table: VarExpr, orders: List[(VarExpr, OrderExpr)]) extends AbstractOrder
 
+case class OrderExpr(ordr : String) extends Expr
+
 abstract sealed class ConditionExpr() extends Expr
 
 case class AndExpr(left : ConditionExpr, right : ConditionExpr) extends ConditionExpr
@@ -43,5 +45,3 @@ case class AndExpr(left : ConditionExpr, right : ConditionExpr) extends Conditio
 case class OrExpr(left : ConditionExpr, right : ConditionExpr) extends ConditionExpr
 
 case class OperExpr(oper: String, left: Expr, right: Expr) extends ConditionExpr
-
-case class OrderExpr(ordr : String) extends Expr
