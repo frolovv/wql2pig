@@ -47,6 +47,13 @@ trait WqlStatements extends WqlConstants {
       FullOrderExpr(relation, combine(column, dir, x))
   }
 
+  val join: Parser[JoinExpr] = ("join " ~> ident) ~ ("by" ~> ident) ~ (("," ~> ident ~ ("by" ~> ident)) *) ^^ {
+    case table ~ column ~ rest => {
+      val mapped = rest map (x => (x._1, x._2))
+      JoinExpr((table, column) :: mapped)
+    }
+  }
+
   val tableStatement: Parser[Expr] = order | select
 
   val assign: Parser[AssignExpr] = ident ~ "=" ~ tableStatement ^^ {
@@ -68,12 +75,10 @@ trait WqlStatements extends WqlConstants {
     case "(" ~ (cond: ConditionExpr) ~ ")" => cond
   }
 
-  val where: Parser[AbstractWhereExpr] = "where" ~ condition ^^ {
-    case "where" ~ cond => WhereExpr(cond)
-  }
+  val where: Parser[AbstractWhereExpr] = "where" ~> condition ^^ (cond => WhereExpr(cond))
 
-  val select: Parser[SelectExpr] = "select" ~ ident ~ "from" ~ ident ~ opt(where) ~ opt(order)^^ {
-    case "select" ~ VarExpr(column) ~ "from" ~ relation ~ whereStmt ~ orderStmt=>
+  val select: Parser[SelectExpr] = "select" ~ ident ~ "from" ~ ident ~ opt(where) ~ opt(order) ^^ {
+    case "select" ~ VarExpr(column) ~ "from" ~ relation ~ whereStmt ~ orderStmt =>
       SelectExpr(ColumnsExpr(List(column)), relation, whereStmt.getOrElse(EmptyWhereExpr()), orderStmt.getOrElse(EmptyOrder()))
   }
 }
