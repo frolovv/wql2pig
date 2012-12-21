@@ -101,4 +101,11 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
     parsing("join users by uuid, events by uuid, rest by uuid") should equal(JoinExpr(
       List((VarExpr("users"), VarExpr("uuid")), (VarExpr("events"), VarExpr("uuid")), (VarExpr("rest"), VarExpr("uuid")))))
   }
+
+  they should "parse filter expressions" in {
+    implicit val parserToTest = this.filter
+    parsing("filter users by (evid == 104)") should equal(FilterExpr(VarExpr("users"), OperExpr("==", VarExpr("evid"), IntExpr(104))))
+    parsing("filter users by evid == 104") should equal(FilterExpr(VarExpr("users"), OperExpr("==", VarExpr("evid"), IntExpr(104))))
+    parsing("filter users by (evid == 104) and src == 3") should equal(FilterExpr(VarExpr("users"), AndExpr(OperExpr("==", VarExpr("evid"), IntExpr(104)), OperExpr("==", VarExpr("src"), IntExpr(3)))))
+  }
 }
