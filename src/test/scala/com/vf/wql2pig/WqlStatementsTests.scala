@@ -27,7 +27,7 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
   }
 
   "The WqlConstants" should "parse simpleorder statement" in {
-    implicit val parserToTest = this.simpleOrder
+    implicit val parserToTest = this.direction
     parsing("asc") should equal(OrderExpr("asc"))
     parsing("desc") should equal(OrderExpr("desc"))
   }
@@ -35,6 +35,7 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
   they should "parse full order statement" in {
     implicit val parserToTest = this.order
     parsing("order users by evid asc") should equal(FullOrderExpr(VarExpr("users"), List((VarExpr("evid"), OrderExpr("asc")))))
+    parsing("order by evid asc") should equal(SelectOrderExpr(List((VarExpr("evid"), OrderExpr("asc")))))
   }
 
   they should "parse asign statement" in {
