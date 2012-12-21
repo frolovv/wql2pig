@@ -72,8 +72,8 @@ trait WqlStatements extends WqlConstants {
     case "where" ~ cond => WhereExpr(cond)
   }
 
-  val select: Parser[SelectExpr] = "select" ~ ident ~ "from" ~ ident ~ opt(where) ^^ {
-    case "select" ~ VarExpr(column) ~ "from" ~ relation ~ whereStmt =>
-      SelectExpr(ColumnsExpr(List(column)), relation, whereStmt.getOrElse(EmptyWhereExpr()), EmptyOrder())
+  val select: Parser[SelectExpr] = "select" ~ ident ~ "from" ~ ident ~ opt(where) ~ opt(order)^^ {
+    case "select" ~ VarExpr(column) ~ "from" ~ relation ~ whereStmt ~ orderStmt=>
+      SelectExpr(ColumnsExpr(List(column)), relation, whereStmt.getOrElse(EmptyWhereExpr()), orderStmt.getOrElse(EmptyOrder()))
   }
 }
