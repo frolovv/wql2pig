@@ -23,7 +23,7 @@ trait WqlConstants extends util.parsing.combinator.RegexParsers {
   val string: Parser[StringExpr] = ("""'""" + """\w*""" + """'""").r ^^ {
     s => StringExpr(unquote(s))
   }
-  val ident: Parser[VarExpr] = ("""[a-zA-Z_=]\w*""".r | failure("couldn't parse identifier")) ^^ {
+  val ident: Parser[VarExpr] = ("""[a-zA-Z_=*]\w*""".r | failure("couldn't parse identifier")) ^^ {
     s => VarExpr(s)
   }
   val const: Parser[LiteralExpr] = (boolean | integer | string | failure("couldn't parse constant"))
@@ -61,8 +61,12 @@ trait WqlStatements extends WqlConstants {
     case "(" ~ (cond: ConditionExpr) ~ ")" => cond
   }
 
-  val select: Parser[SelectExpr] = "select" ~ ("*" | ident) ~ "from" ~ ident ^^ {
-    case "select" ~ "*" ~ "from" ~ relation => SelectExpr(ColumnsExpr(List("*")), relation, EmptyWhereExpr(), EmptyOrder())
-    case "select" ~ VarExpr(column) ~ "from" ~ relation => SelectExpr(ColumnsExpr(List(column)), relation, EmptyWhereExpr(), EmptyOrder())
+  val where: Parser[AbstractWhereExpr] = "where" ~ condition ^^ {
+    case "where" ~ condition => WhereExpr(condition)
+  }
+
+  val select: Parser[SelectExpr] = "select" ~ ident ~ "from" ~ ident ~ opt(where) ^^ {
+    case "select" ~ VarExpr(column) ~ "from" ~ relation ~ whereStmt =>
+      SelectExpr(ColumnsExpr(List(column)), relation, whereStmt.getOrElse(EmptyWhereExpr()), EmptyOrder())
   }
 }
