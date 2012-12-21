@@ -31,13 +31,20 @@ trait WqlConstants extends util.parsing.combinator.RegexParsers {
 
 trait WqlStatements extends WqlConstants {
   // order users by evid desc
-  val simpleOrder: Parser[OrderExpr] = ("asc" | "desc") ^^ {
+  val direction: Parser[OrderExpr] = ("asc" | "desc") ^^ {
     case "asc" => OrderExpr("asc")
     case "desc" => OrderExpr("desc")
   }
 
-  val order: Parser[FullOrderExpr] = "order" ~ ident ~ "by" ~ ident ~ simpleOrder ^^ {
-    case "order" ~ relation ~ "by" ~ column ~ someOrder => FullOrderExpr(relation, List((column, someOrder)))
+  def combine(column: VarExpr, direction: OrderExpr, s: Any): List[(VarExpr, OrderExpr)] = {
+    List((column, direction))
+  }
+
+  val order: Parser[AbstractOrder] = ("order" ~ ident ~ "by" | "order" ~ "by") ~ ident ~ direction ~ (("," ~ ident ~ direction) *) ^^ {
+    case "order" ~ "by" ~ column ~ dir ~ x =>
+      SelectOrderExpr(combine(column, dir, x))
+    case "order" ~ (relation: VarExpr) ~ "by" ~ column ~ dir ~ x =>
+      FullOrderExpr(relation, combine(column, dir, x))
   }
 
   val tableStatement: Parser[Expr] = order | select
