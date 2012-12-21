@@ -96,4 +96,9 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
     parsing("where (x = 2) or (y = 3)") should equal(WhereExpr(OrExpr(OperExpr("=", VarExpr("x"), IntExpr(2)), OperExpr("=", VarExpr("y"), IntExpr(3)))))
   }
 
+  they should "parse join expressions" in {
+    implicit val parserToTest = this.join
+    parsing("join users by uuid, events by uuid, rest by uuid") should equal(JoinExpr(
+      List((VarExpr("users"), VarExpr("uuid")), (VarExpr("events"), VarExpr("uuid")), (VarExpr("rest"), VarExpr("uuid")))))
+  }
 }
