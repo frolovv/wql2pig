@@ -18,13 +18,9 @@ case class BooleanExpr(value: Boolean) extends LiteralExpr
 
 case class AssignExpr(name: VarExpr, expr: Expr) extends Expr
 
-case class SelectExpr(columns: AbstractColumnsExpr, from: VarExpr, where: AbstractWhereExpr, order: AbstractOrder) extends Expr
+case class SelectExpr(columns: ColumnsExpr, from: VarExpr, where: AbstractWhereExpr, order: AbstractOrder) extends Expr
 
-abstract sealed class AbstractColumnsExpr extends Expr
-
-case class ColumnsExpr(names: List[String]) extends AbstractColumnsExpr
-
-case class AllColumnsExpr() extends AbstractColumnsExpr
+case class ColumnsExpr(names: List[String]) extends Expr
 
 abstract sealed class AbstractWhereExpr extends Expr
 
@@ -36,9 +32,9 @@ abstract sealed class AbstractOrder extends Expr
 
 case class EmptyOrder() extends AbstractOrder
 
-case class SelectOrderExpr(orders: List[(VarExpr, SimpleOrderExpr)]) extends AbstractOrder
+case class SelectOrderExpr(orders: List[(VarExpr, OrderExpr)]) extends AbstractOrder
 
-case class FullOrderExpr(table: VarExpr, orders: List[(VarExpr, SimpleOrderExpr)]) extends AbstractOrder
+case class FullOrderExpr(table: VarExpr, orders: List[(VarExpr, OrderExpr)]) extends AbstractOrder
 
 abstract sealed class ConditionExpr() extends Expr
 
@@ -48,8 +44,4 @@ case class OrExpr(left : ConditionExpr, right : ConditionExpr) extends Condition
 
 case class OperExpr(oper: String, left: Expr, right: Expr) extends ConditionExpr
 
-abstract sealed class SimpleOrderExpr extends Expr
-
-case class AscOrder() extends SimpleOrderExpr
-
-case class DescOrder() extends SimpleOrderExpr
+case class OrderExpr(ordr : String) extends Expr
