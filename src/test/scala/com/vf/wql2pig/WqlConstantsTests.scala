@@ -3,6 +3,7 @@ package com.vf.wql2pig
 import util.parsing.input.CharSequenceReader
 import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.FlatSpec
+import com.vf.wql2pig.definitions._
 
 /**
  * User: valeryf
@@ -28,8 +29,8 @@ class WqlConstantsTests extends WqlConstants with ShouldMatchers with FlatSpec {
 
   "The WqlConstants" should "parse boolean literals" in {
     implicit val parserToTest = boolean
-    parsing("true") should equal(BooleanExpr(true))
-    parsing("false") should equal(BooleanExpr(false))
+    parsing("true") should equal(BooleanWqlExpr(value = true))
+    parsing("false") should equal(BooleanWqlExpr(value = false))
     assertFail("True")
     assertFail("False")
     assertFail("TRUE")
@@ -39,16 +40,16 @@ class WqlConstantsTests extends WqlConstants with ShouldMatchers with FlatSpec {
 
   they should "parse numeric literals" in {
     implicit val parserToTest = this.integer
-    parsing("123") should equal(IntExpr(123))
-    parsing("-123") should equal(IntExpr(-123))
+    parsing("123") should equal(IntWqlExpr(123))
+    parsing("-123") should equal(IntWqlExpr(-123))
     assertFail("T123")
     assertFail("F123alse")
   }
 
   they should "parse string literals" in {
     implicit val parserToTest = this.string
-    parsing("'abc'") should equal(StringExpr("abc"))
-    parsing("'users'") should equal(StringExpr("users"))
+    parsing("'abc'") should equal(StringWqlExpr("abc"))
+    parsing("'users'") should equal(StringWqlExpr("users"))
     assertFail("T123")
     assertFail("F123alse")
     assertFail("\"F123alse")
@@ -56,10 +57,10 @@ class WqlConstantsTests extends WqlConstants with ShouldMatchers with FlatSpec {
 
   they should "parse identifier literals" in {
     implicit val parserToTest = this.ident
-    parsing("abc") should equal(VarExpr("abc"))
-    parsing("users") should equal(VarExpr("users"))
-    //parsing("users and more") should  equal(VarExpr("users"))
-    parsing(" users ") should equal(VarExpr("users"))
+    parsing("abc") should equal(VarWqlExpr("abc"))
+    parsing("users") should equal(VarWqlExpr("users"))
+    //parsing("users and more") should  equal(VarWqlExpr("users"))
+    parsing(" users ") should equal(VarWqlExpr("users"))
 
     assertFail("'T123")
     assertFail("'F123alse")
