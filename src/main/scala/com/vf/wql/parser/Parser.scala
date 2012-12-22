@@ -1,8 +1,7 @@
-package com.vf.wql2pig
+package com.vf.wql.parser
 
 import util.parsing.input.CharSequenceReader
-import com.vf.wql2pig.definitions._
-import com.vf.pig.definitions.PigExpr
+import com.vf.wql.definitions._
 
 
 /**
@@ -91,20 +90,13 @@ trait WqlStatements extends WqlConstants {
 }
 
 trait WqlParser extends WqlStatements {
-  val wqlParser: Parser[List[WqlExpr]] = assign *
+  val wqlParser: Parser[List[WqlExpr]] = assign.*
 
   def parse(line: String): List[WqlExpr] = {
     val input = new CharSequenceReader(line)
     wqlParser(input) match {
       case Success(result, _) => result
-      case Failure => throw new IllegalArgumentException("Could not parse " + line)
+      case _ => throw new IllegalArgumentException("Could not parse " + line)
     }
-  }
-}
-
-trait Wql2PigParser extends WqlParser {
-  def wql2pig(line: String): List[PigExpr] = {
-    val wqls = parse(line)
-    com.vf.pig.definitions.DumpExpr(com.vf.pig.definitions.VarExpr("dump")) :: Nil
   }
 }

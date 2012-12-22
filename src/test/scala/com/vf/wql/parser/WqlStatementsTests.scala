@@ -1,10 +1,9 @@
-package com.vf.wql2pig
+package com.vf.wql.parser
 
-import definitions.EmptyOrder
 import util.parsing.input.CharSequenceReader
 import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.FlatSpec
-import com.vf.wql2pig.definitions._
+import com.vf.wql.definitions._
 
 /**
  * User: valeryf

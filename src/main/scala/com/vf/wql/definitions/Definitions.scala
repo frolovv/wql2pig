@@ -1,4 +1,4 @@
-package com.vf.wql2pig.definitions
+package com.vf.wql.definitions
 
 /**
  * User: valeryf
