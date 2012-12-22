@@ -29,8 +29,8 @@ class WqlConstantsTests extends WqlConstants with ShouldMatchers with FlatSpec {
 
   "The WqlConstants" should "parse boolean literals" in {
     implicit val parserToTest = boolean
-    parsing("true") should equal(BooleanWqlExpr(value = true))
-    parsing("false") should equal(BooleanWqlExpr(value = false))
+    parsing("true") should equal(WqlBoolean(value = true))
+    parsing("false") should equal(WqlBoolean(value = false))
     assertFail("True")
     assertFail("False")
     assertFail("TRUE")
@@ -40,16 +40,16 @@ class WqlConstantsTests extends WqlConstants with ShouldMatchers with FlatSpec {
 
   they should "parse numeric literals" in {
     implicit val parserToTest = this.integer
-    parsing("123") should equal(IntWqlExpr(123))
-    parsing("-123") should equal(IntWqlExpr(-123))
+    parsing("123") should equal(WqlInt(123))
+    parsing("-123") should equal(WqlInt(-123))
     assertFail("T123")
     assertFail("F123alse")
   }
 
   they should "parse string literals" in {
     implicit val parserToTest = this.string
-    parsing("'abc'") should equal(StringWqlExpr("abc"))
-    parsing("'users'") should equal(StringWqlExpr("users"))
+    parsing("'abc'") should equal(WqlString("abc"))
+    parsing("'users'") should equal(WqlString("users"))
     assertFail("T123")
     assertFail("F123alse")
     assertFail("\"F123alse")
@@ -57,10 +57,10 @@ class WqlConstantsTests extends WqlConstants with ShouldMatchers with FlatSpec {
 
   they should "parse identifier literals" in {
     implicit val parserToTest = this.ident
-    parsing("abc") should equal(VarWqlExpr("abc"))
-    parsing("users") should equal(VarWqlExpr("users"))
-    //parsing("users and more") should  equal(VarWqlExpr("users"))
-    parsing(" users ") should equal(VarWqlExpr("users"))
+    parsing("abc") should equal(WqlVar("abc"))
+    parsing("users") should equal(WqlVar("users"))
+    //parsing("users and more") should  equal(WqlVar("users"))
+    parsing(" users ") should equal(WqlVar("users"))
 
     assertFail("'T123")
     assertFail("'F123alse")

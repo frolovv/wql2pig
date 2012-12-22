@@ -6,46 +6,44 @@ package com.vf.wql.definitions
  */
 abstract sealed class WqlExpr
 
-case class VarWqlExpr(name: String) extends WqlExpr
+case class WqlVar(name: String) extends WqlExpr
 
 abstract sealed class LiteralWqlExpr extends WqlExpr
 
-case class StringWqlExpr(str: String) extends LiteralWqlExpr
+case class WqlString(str: String) extends LiteralWqlExpr
 
-case class IntWqlExpr(num: Int) extends LiteralWqlExpr
+case class WqlInt(num: Int) extends LiteralWqlExpr
 
-case class BooleanWqlExpr(value: Boolean) extends LiteralWqlExpr
+case class WqlBoolean(value: Boolean) extends LiteralWqlExpr
 
-case class AssignWqlExpr(name: VarWqlExpr, expr: WqlExpr) extends WqlExpr
+case class WqlAssign(name: WqlVar, expr: WqlExpr) extends WqlExpr
 
-case class SelectWqlExpr(columns: ColumnsWqlExpr, from: VarWqlExpr, where: AbstractWhereWqlExpr, order: AbstractOrder) extends WqlExpr
+case class WqlSelect(columns: List[String], from: WqlVar, where: WqlAbstractWhere, order: WqlAbstractOrder) extends WqlExpr
 
-case class ColumnsWqlExpr(names: List[String]) extends WqlExpr
+abstract sealed class WqlAbstractWhere extends WqlExpr
 
-abstract sealed class AbstractWhereWqlExpr extends WqlExpr
+case class WqlWhere(condition : WqlCondition) extends WqlAbstractWhere
 
-case class WhereWqlExpr(condition : ConditionWqlExpr) extends AbstractWhereWqlExpr
+case class WqlEmptyWhere() extends WqlAbstractWhere
 
-case class EmptyWhereWqlExpr() extends AbstractWhereWqlExpr
+abstract sealed class WqlAbstractOrder extends WqlExpr
 
-abstract sealed class AbstractOrder extends WqlExpr
+case class WqlEmptyOrder() extends WqlAbstractOrder
 
-case class EmptyOrder() extends AbstractOrder
+case class WqlSelectOrder(orders: List[(WqlVar, WqlDirection)]) extends WqlAbstractOrder
 
-case class SelectOrderWqlExpr(orders: List[(VarWqlExpr, OrderWqlExpr)]) extends AbstractOrder
+case class WqlFullOrder(table: WqlVar, orders: List[(WqlVar, WqlDirection)]) extends WqlAbstractOrder
 
-case class FullOrderWqlExpr(table: VarWqlExpr, orders: List[(VarWqlExpr, OrderWqlExpr)]) extends AbstractOrder
+case class WqlDirection(direction : String) extends WqlExpr
 
-case class OrderWqlExpr(ordr : String) extends WqlExpr
+abstract sealed class WqlCondition() extends WqlExpr
 
-abstract sealed class ConditionWqlExpr() extends WqlExpr
+case class WqlAnd(left : WqlCondition, right : WqlCondition) extends WqlCondition
 
-case class AndWqlExpr(left : ConditionWqlExpr, right : ConditionWqlExpr) extends ConditionWqlExpr
+case class WqlOr(left : WqlCondition, right : WqlCondition) extends WqlCondition
 
-case class OrWqlExpr(left : ConditionWqlExpr, right : ConditionWqlExpr) extends ConditionWqlExpr
+case class WqlOper(oper: String, left: WqlExpr, right: WqlExpr) extends WqlCondition
 
-case class OperWqlExpr(oper: String, left: WqlExpr, right: WqlExpr) extends ConditionWqlExpr
+case class WqlJoin(tablesAndColumns : List[(WqlVar, WqlVar)]) extends WqlExpr
 
-case class JoinWqlExpr(tablesAndColumns : List[(VarWqlExpr, VarWqlExpr)]) extends WqlExpr
-
-case class FilterWqlExpr(relation : VarWqlExpr, conditions : ConditionWqlExpr) extends WqlExpr
+case class WqlFilter(relation : WqlVar, conditions : WqlCondition) extends WqlExpr
