@@ -39,7 +39,7 @@ case class PigEmptyCondition() extends PigCondition
 case class Equality() extends Pig
 case class ColumnFilterEquality() extends Pig
 
-case class PigNumber(value: Int) extends Pig
+case class PigInt(value: Int) extends Pig
 
 case class PigDistinct(what: PigVar, par: PigParallel) extends Pig
 

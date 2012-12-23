@@ -7,35 +7,35 @@ import com.vf.pig.definitions._
  * Date: 12/22/12 2:26 PM
  */
 trait PigPrinter {
-  val semicolumn = ";"
+  private val semicolumn = ";"
 
-  def exprToString(expr: Pig): String = {
+  private def pigToString(expr: Pig): String = {
     expr match {
       case PigDump(PigVar(name)) => "dump " + name + semicolumn
       case PigDescribe(PigVar(name)) => "describe " + name + semicolumn
       case PigFilter(PigVar(name), condition: Pig) => {
-        "filter " + name + " by " + exprToString(condition)
+        "filter " + name + " by " + pigToString(condition)
       }
       case Equality() => "=="
       case ColumnFilterEquality() => "="
-      case PigNumber(value) => value.toString
+      case PigInt(value) => value.toString
       case PigVar(name) => name
       case PigEmptyCondition() => ""
 
 
-      case PigAssign(PigVar(name), value) => name + " = " + exprToString(value) + semicolumn
+      case PigAssign(PigVar(name), value) => name + " = " + pigToString(value) + semicolumn
 
       case PigAnd(left: PigCondition, right: PigCondition) => {
-        "(" + exprToString(left) + ") and (" + exprToString(right) + ")"
+        "(" + pigToString(left) + ") and (" + pigToString(right) + ")"
       }
       case PigOr(left: PigCondition, right: PigCondition) => {
-        "(" + exprToString(left) + ") or (" + exprToString(right) + ")"
+        "(" + pigToString(left) + ") or (" + pigToString(right) + ")"
       }
       case PigOper(operator, field, value) =>
-        exprToString(field) + " " + operator + " " + exprToString(value)
+        pigToString(field) + " " + operator + " " + pigToString(value)
 
       case PigGroup(PigVar(name), exprs, par) => exprs match {
-        case field :: Nil => "group " + name + " by " + field + " " + exprToString(par)
+        case field :: Nil => "group " + name + " by " + field + " " + pigToString(par)
         case _ => {
           val joined = exprs.mkString(", ")
           "(" + joined + ")"
@@ -43,13 +43,13 @@ trait PigPrinter {
       }
 
       case PigLoad(PigVar(from), udf: AbstractPigUdf, schema: PigSchema) => {
-        "load " + quote(from) + " using " + exprToString(udf) + " as " + exprToString(schema)
+        "load " + quote(from) + " using " + pigToString(udf) + " as " + pigToString(schema)
       }
       case PigStore(PigVar(name), PigVar(dir), udf) => {
-        "store " + name + " into " + quote(dir) + " using " + exprToString(udf) + ";"
+        "store " + name + " into " + quote(dir) + " using " + pigToString(udf) + ";"
       }
 
-      case PigDistinct(PigVar(name), par) => "distinct " + name + exprToString(par)
+      case PigDistinct(PigVar(name), par) => "distinct " + name + pigToString(par)
       case PigLimit(PigVar(name), n) => "limit " + name + " " + n
       case PigOrder(PigVar(name), orders, par) => {
         val mapped = orders map {
@@ -57,11 +57,11 @@ trait PigPrinter {
         }
         val joined = mapped.mkString(", ")
 
-        "order " + name + " by " + joined + " " + exprToString(par)
+        "order " + name + " by " + joined + " " + pigToString(par)
       }
 
       case PigUnion(first, second, rest) => {
-        val mapped = (first :: second :: rest) map exprToString
+        val mapped = (first :: second :: rest) map pigToString
         val joined = mapped.mkString(", ")
         "union " + joined
       }
@@ -70,7 +70,7 @@ trait PigPrinter {
       case PigParallel(cnt) => "parallel " + cnt
 
       case PigUdf(name, exprs) => {
-        val values = exprs map exprToString
+        val values = exprs map pigToString
         val quoted = values map quote
         name + "(" + quoted.mkString(",\n\t") + ")"
       }
@@ -80,7 +80,7 @@ trait PigPrinter {
       }
 
       case PigColumnFilter(conditions) => {
-        exprToString(conditions)
+        pigToString(conditions)
       }
 
       case PigWixTableLoader(table, keyFilter, columnFilter, columns) => {
@@ -89,7 +89,7 @@ trait PigPrinter {
         }
         val joined = mapped.mkString(" ")
 
-        exprToString(PigUdf("TableLoader", List(PigVar(table), keyFilter, columnFilter, PigVar(joined))))
+        pigToString(PigUdf("TableLoader", List(PigVar(table), keyFilter, columnFilter, PigVar(joined))))
       }
 
       case PigSchema(names, types) =>
@@ -104,11 +104,11 @@ trait PigPrinter {
   }
 
   def exprsToString(exprs: List[Pig]): String = {
-    val values = exprs map exprToString
+    val values = exprs map pigToString
     values.mkString("\n")
   }
 
-  def quote(str: String): String = {
+  private def quote(str: String): String = {
     if (str.startsWith("'") && str.endsWith("'"))
       str
     else
