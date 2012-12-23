@@ -1,15 +1,8 @@
 package com.vf.pig.parser
 
 import com.vf.pig.definitions._
-import com.vf.pig.definitions.PigAssign
-import com.vf.pig.definitions.PigVar
-import com.vf.pig.definitions.PigForeach
 import com.vf.wql.definitions
-import com.vf.pig.definitions.PigForeach
 import definitions._
-import com.vf.pig.definitions.PigSchema
-import com.vf.pig.definitions.PigAssign
-import com.vf.pig.definitions.PigVar
 import com.vf.pig.definitions.PigForeach
 import definitions.WqlAssign
 import com.vf.pig.definitions.PigSchema
@@ -25,7 +18,7 @@ import collection.mutable.ListBuffer
  */
 trait Wql2Pig {
 
-  def createSchema(names: List[String]): PigSchema = {
+  private def createSchema(names: List[String]): PigSchema = {
     val types = names map {
       case x if List("evid", "date_created").contains(x) => "long"
       case _ => "chararray"
@@ -33,43 +26,48 @@ trait Wql2Pig {
     PigSchema(names, types)
   }
 
-  def emitSelect(columns: List[String], table: String, where: WqlAbstractWhere, order: WqlAbstractOrder, relation: String) : List[Pig] = {
-    var result =  new ListBuffer[Pig]()
+  private def emitSelect(columns: List[String], table: String, where: WqlAbstractWhere, order: WqlAbstractOrder, relation: String): List[Pig] = {
+    var result = new ListBuffer[Pig]()
     result += PigForeach(PigVar(table), columns, createSchema(columns))
     where match {
       case WqlWhere(condition) => {
-        result += PigAssign(PigVar(relation), PigFilter(PigVar(relation), wql2pig(condition)))
+        result += PigAssign(PigVar(relation), PigFilter(PigVar(relation), pigify(condition)))
       }
+      case _ =>{}
     }
     order match {
       case WqlSelectOrder(orders) => {
-        val mapped = orders map {case (WqlVar(column), WqlDirection(direction)) => (PigVar(column), PigDirection(direction))}
-        result += PigAssign(PigVar(relation), PigOrder(PigVar(relation), mapped , PigParallel(3)))
+        val mapped = orders map {
+          case (WqlVar(column), WqlDirection(direction)) => (PigVar(column), PigDirection(direction))
+        }
+        result += PigAssign(PigVar(relation), PigOrder(PigVar(relation), mapped, PigParallel(3)))
       }
+      case _ => {}
     }
-
     result.toList
   }
 
-  def wql2pig(expr: WqlExpr): Pig = {
+  private def pigify(expr: WqlExpr): Pig = {
     expr match {
-      case WqlAnd(left, right) => PigAnd(wql2pig(left).asInstanceOf[PigCondition], wql2pig(right).asInstanceOf[PigCondition])
-      case WqlOr(left, right) => PigOr(wql2pig(left).asInstanceOf[PigCondition], wql2pig(right).asInstanceOf[PigCondition])
-      case WqlOper(oper, left, right) => PigOper(oper, wql2pig(left), wql2pig(right))
+      case WqlAnd(left, right) => PigAnd(pigify(left).asInstanceOf[PigCondition], pigify(right).asInstanceOf[PigCondition])
+      case WqlOr(left, right) => PigOr(pigify(left).asInstanceOf[PigCondition], pigify(right).asInstanceOf[PigCondition])
+      case WqlOper(oper, left, right) => PigOper(oper, pigify(left), pigify(right))
+      case WqlVar(x) => PigVar(x)
+      case WqlInt(n) => PigInt(n)
     }
   }
 
-  def wql2pigs(wql: WqlExpr): List[Pig] = {
-    wql match {
-
-      case WqlAssign(WqlVar(relation), WqlSelect(columns, WqlVar(table), where, order)) => {
-        emitSelect(columns,table, where, order, relation) match {
-          case head :: Nil => PigAssign(PigVar(relation), head) :: Nil
-          case head :: rest => PigAssign(PigVar(relation), head) :: rest
+  def pigify(wqls: List[WqlExpr]): List[Pig] = {
+    wqls match {
+      case Nil => Nil
+      case WqlAssign(WqlVar(relation), WqlSelect(columns, WqlVar(table), where, order)) :: rest => {
+        emitSelect(columns, table, where, order, relation) match {
+          case head :: Nil => PigAssign(PigVar(relation), head) :: pigify(rest)
+          case head :: rest2 => PigAssign(PigVar(relation), head) :: rest2 ++ pigify(rest)
         }
       }
-      case WqlAssign(WqlVar(name), expr: WqlExpr) => {
-        PigAssign(PigVar(name), wql2pig(expr)) :: Nil
+      case WqlAssign(WqlVar(name), expr: WqlExpr) :: rest => {
+        PigAssign(PigVar(name), pigify(expr)) :: pigify(rest)
       }
     }
   }
