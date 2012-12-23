@@ -9,7 +9,7 @@ import com.vf.pig.definitions._
 trait PigPrinter {
   private val semicolumn = ";"
 
-  private def pigToString(expr: Pig): String = {
+  def pigToString(expr: Pig): String = {
     expr match {
       case PigDump(PigVar(name)) => "dump " + name + semicolumn
       case PigDescribe(PigVar(name)) => "describe " + name + semicolumn
