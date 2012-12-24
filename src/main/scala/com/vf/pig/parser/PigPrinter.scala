@@ -75,6 +75,14 @@ trait PigPrinter {
         name + "(" + quoted.mkString(",\n\t") + ")"
       }
 
+      case PigJoin(tablesAndColumns) => {
+        val mapped = tablesAndColumns map {
+          case (t, c) => pigToString(t) + " by " + pigToString(c)
+        }
+        val joined = mapped.mkString(", ")
+        "join " + joined
+      }
+
       case PigKeyFilter(start, stop, src) => {
         "date_created between (\"" + start + "\", \"" + stop + "\") and src = " + src
       }

@@ -64,3 +64,5 @@ case class PigKeyFilter(start: String, stop: String, src: Int) extends Pig
 case class PigColumnFilter(conditions : PigCondition) extends Pig
 
 case class PigForeach(table : PigVar, columns : List[String], as : PigSchema) extends Pig
+
+case class PigJoin(tablesAndColumns : List[(PigVar, PigVar)]) extends Pig

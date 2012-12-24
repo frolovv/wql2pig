@@ -90,4 +90,9 @@ class PigPrinterTests extends PigPrinter with ShouldMatchers with FlatSpec {
     pigToString(PigKeyFilter("2012-12-12 00:00", "2012-12-12 01:00", 42)) should
       equal("date_created between (\"2012-12-12 00:00\", \"2012-12-12 01:00\") and src = 42")
   }
+
+  they should "print join statements" in {
+    pigToString(PigJoin(List((PigVar("x"), PigVar("y")), (PigVar("z"), PigVar("k"))))) should
+      equal("join x by y, z by k")
+  }
 }
