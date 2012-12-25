@@ -41,6 +41,8 @@ case class ColumnFilterEquality() extends Pig
 
 case class PigInt(value: Int) extends Pig
 
+case class PigString(value : String) extends Pig
+
 case class PigDistinct(what: PigVar, par: PigParallel) extends Pig
 
 case class PigLimit(what: PigVar, cnt: Int) extends Pig
