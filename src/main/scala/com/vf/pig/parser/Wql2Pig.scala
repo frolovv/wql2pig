@@ -33,7 +33,7 @@ trait Wql2Pig {
       case WqlWhere(condition) => {
         result += PigAssign(PigVar(relation), PigFilter(PigVar(relation), pigify(condition)))
       }
-      case _ =>{}
+      case _ => {}
     }
     order match {
       case WqlSelectOrder(orders) => {
@@ -54,6 +54,25 @@ trait Wql2Pig {
       case WqlOper(oper, left, right) => PigOper(oper, pigify(left), pigify(right))
       case WqlVar(x) => PigVar(x)
       case WqlInt(n) => PigInt(n)
+      case WqlString(s) => PigString(s)
+
+      case WqlJoin(tablesAndColumns) => {
+        val mapped = tablesAndColumns map {
+          case (WqlVar(table), WqlVar(col)) => (PigVar(table), PigVar(col))
+        }
+        PigJoin(mapped)
+      }
+
+      case WqlFullOrder(WqlVar(relation), orders) => {
+        val mapped = orders map {
+          case (WqlVar(col), WqlDirection(dir)) => (PigVar(col), PigDirection(dir))
+        }
+        PigOrder(PigVar(relation), mapped, PigParallel(3))
+      }
+
+      case WqlFilter(WqlVar(relation), condition) => {
+        PigFilter(PigVar(relation), pigify(condition))
+      }
     }
   }
 
