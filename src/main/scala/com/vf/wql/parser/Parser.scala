@@ -83,9 +83,9 @@ trait WqlStatements extends WqlConstants {
     case relation ~ conditions => WqlFilter(relation, conditions)
   }
 
-  val select: Parser[WqlSelect] = "select" ~ ident ~ "from" ~ ident ~ opt(where) ~ opt(order) ^^ {
-    case "select" ~ WqlVar(column) ~ "from" ~ relation ~ whereStmt ~ orderStmt =>
-      WqlSelect(List(column), relation, whereStmt.getOrElse(WqlEmptyWhere()), orderStmt.getOrElse(WqlEmptyOrder()))
+  val select: Parser[WqlSelect] = "select" ~ ident ~ opt(("," ~> ident)*) ~ "from" ~ ident ~ opt(where) ~ opt(order) ^^ {
+    case "select" ~ WqlVar(column) ~ columns ~ "from" ~ relation ~ whereStmt ~ orderStmt =>
+      WqlSelect(column :: (columns.getOrElse(List()) map {case WqlVar(x) => x}), relation, whereStmt.getOrElse(WqlEmptyWhere()), orderStmt.getOrElse(WqlEmptyOrder()))
   }
 }
 
