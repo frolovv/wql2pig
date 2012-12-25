@@ -25,6 +25,8 @@ class Wql2PigTests extends Wql2Pig with ShouldMatchers with FlatSpec with WqlPar
     parsing("x = select evid from users") should equal(List(assign))
     parsing("x = select evid from users where evid = 4") should equal(List(assign, filter))
     parsing("x = select evid from users where evid = 4 order by evid desc") should equal(List(assign, filter, order))
+
+    parsing("x = select evid, uuid from users") should equal(List(PigAssign(PigVar("x"), PigForeach(PigVar("users"), List("evid", "uuid"), PigSchema(List("evid", "uuid"), List("long", "chararray"))))))
   }
 
   it should "pigify order statements" in {
@@ -34,5 +36,10 @@ class Wql2PigTests extends Wql2Pig with ShouldMatchers with FlatSpec with WqlPar
   it should "pigify join statements" in {
     parsing("x = join users by uuid, premiums by uuid") should
       equal(List(PigAssign(PigVar("x"), PigJoin(List((PigVar("users"), PigVar("uuid")), (PigVar("premiums"), PigVar("uuid")))))))
+  }
+
+  it should "pigify filter statements" in {
+    parsing("x = filter users by evid = 103") should
+      equal(List(PigAssign(PigVar("x"), PigFilter(PigVar("users"), PigOper("=", PigVar("evid"), PigInt(103))))))
   }
 }
