@@ -62,6 +62,8 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
     parsing("select evid from users") should equal(WqlSelect(List("evid"), WqlVar("users"), WqlEmptyWhere(), WqlEmptyOrder()))
     parsing("select evid from users where src = 3") should equal(WqlSelect(List("evid"), WqlVar("users"), WqlWhere(WqlOper("=", WqlVar("src"), WqlInt(3))), WqlEmptyOrder()))
     parsing("select evid from users where src = 3 order by evid desc") should equal(WqlSelect(List("evid"), WqlVar("users"), WqlWhere(WqlOper("=", WqlVar("src"), WqlInt(3))), WqlSelectOrder(List((WqlVar("evid"), WqlDirection("desc"))))))
+
+    parsing("select evid, uuid from users") should equal(WqlSelect(List("evid", "uuid"), WqlVar("users"), WqlEmptyWhere(), WqlEmptyOrder()))
   }
 
   they should "parse simple condition expressions" in {
