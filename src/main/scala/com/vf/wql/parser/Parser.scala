@@ -23,7 +23,7 @@ trait WqlConstants extends util.parsing.combinator.RegexParsers {
     else s
   }
 
-  val string: Parser[WqlString] = ("""'""" + """\w*""" + """'""").r ^^ {
+  val string: Parser[WqlString] = ("""'""" + """(\w|-)*""" + """'""").r ^^ {
     s => WqlString(unquote(s))
   }
   val ident: Parser[WqlVar] = ("""[a-zA-Z_=*](\w|=)*""".r | failure("couldn't parse identifier")) ^^ {
@@ -79,13 +79,21 @@ trait WqlStatements extends WqlConstants {
 
   val where: Parser[WqlAbstractWhere] = "where" ~> condition ^^ (cond => WqlWhere(cond))
 
+  val wherekey: Parser[WqlAbstractWhere] = "wherekey" ~ oper ~ "and" ~ "date_created" ~ "between" ~ "(" ~ string ~ "," ~ string ~ ")" ^^ {
+    case "wherekey" ~ WqlOper("=", WqlVar("src"), WqlInt(src)) ~ "and" ~ "date_created" ~ "between" ~ "(" ~ (start: WqlString) ~ "," ~ (stop: WqlString) ~ ")" => {
+      WqlWhereKey(src.toString, start.str, stop.str)
+    }
+  }
+
   val filter: Parser[WqlFilter] = ("filter" ~> ident) ~ ("by" ~> condition) ^^ {
     case relation ~ conditions => WqlFilter(relation, conditions)
   }
 
-  val select: Parser[WqlSelect] = "select" ~ ident ~ opt(("," ~> ident)*) ~ "from" ~ ident ~ opt(where) ~ opt(order) ^^ {
-    case "select" ~ WqlVar(column) ~ columns ~ "from" ~ relation ~ whereStmt ~ orderStmt =>
-      WqlSelect(column :: (columns.getOrElse(List()) map {case WqlVar(x) => x}), relation, whereStmt.getOrElse(WqlEmptyWhere()), orderStmt.getOrElse(WqlEmptyOrder()))
+  val select: Parser[WqlSelect] = "select" ~ ident ~ opt(("," ~> ident) *) ~ "from" ~ ident ~ opt(wherekey) ~ opt(where) ~ opt(order) ^^ {
+    case "select" ~ WqlVar(column) ~ columns ~ "from" ~ relation ~ whereKey ~ whereStmt ~ orderStmt =>
+      WqlSelect(column :: (columns.getOrElse(List()) map {
+        case WqlVar(x) => x
+      }), relation, whereKey.getOrElse(WqlEmptyWhere()), whereStmt.getOrElse(WqlEmptyWhere()), orderStmt.getOrElse(WqlEmptyOrder()))
   }
 }
 

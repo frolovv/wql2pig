@@ -18,11 +18,12 @@ case class WqlBoolean(value: Boolean) extends LiteralWqlExpr
 
 case class WqlAssign(name: WqlVar, expr: WqlExpr) extends WqlExpr
 
-case class WqlSelect(columns: List[String], from: WqlVar, where: WqlAbstractWhere, order: WqlAbstractOrder) extends WqlExpr
+case class WqlSelect(columns: List[String], from: WqlVar, whereKey: WqlAbstractWhere, where: WqlAbstractWhere, order: WqlAbstractOrder) extends WqlExpr
 
 abstract sealed class WqlAbstractWhere extends WqlExpr
 
 case class WqlWhere(condition : WqlCondition) extends WqlAbstractWhere
+case class WqlWhereKey(src : String, start : String, end : String) extends WqlAbstractWhere
 
 case class WqlEmptyWhere() extends WqlAbstractWhere
 

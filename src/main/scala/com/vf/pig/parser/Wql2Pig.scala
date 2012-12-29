@@ -26,9 +26,15 @@ trait Wql2Pig {
     PigSchema(names, types)
   }
 
-  private def emitSelect(columns: List[String], table: String, where: WqlAbstractWhere, order: WqlAbstractOrder, relation: String): List[Pig] = {
+  private def emitSelect(columns: List[String], table: String, whereKey: WqlAbstractWhere, where: WqlAbstractWhere, order: WqlAbstractOrder, relation: String): List[Pig] = {
     var result = new ListBuffer[Pig]()
-    result += PigForeach(PigVar(table), columns, createSchema(columns))
+
+    whereKey match {
+      case WqlWhereKey(src, start, end) =>
+        result += PigLoad(PigVar("wix-bi"), PigWixTableLoader(table, PigKeyFilter(start, end, src.toInt), PigColumnFilter(pigify(where).asInstanceOf[PigCondition]), columns), createSchema(columns))
+      case WqlEmptyWhere() => result += PigForeach(PigVar(table), columns, createSchema(columns))
+    }
+
     where match {
       case WqlWhere(condition) => {
         result += PigAssign(PigVar(relation), PigFilter(PigVar(relation), pigify(condition)))
@@ -55,6 +61,7 @@ trait Wql2Pig {
       case WqlVar(x) => PigVar(x)
       case WqlInt(n) => PigInt(n)
       case WqlString(s) => PigString(s)
+      case WqlEmptyWhere() => PigEmptyCondition()
 
       case WqlJoin(tablesAndColumns) => {
         val mapped = tablesAndColumns map {
@@ -79,8 +86,8 @@ trait Wql2Pig {
   def pigify(wqls: List[WqlExpr]): List[Pig] = {
     wqls match {
       case Nil => Nil
-      case WqlAssign(WqlVar(relation), WqlSelect(columns, WqlVar(table), where, order)) :: rest => {
-        emitSelect(columns, table, where, order, relation) match {
+      case WqlAssign(WqlVar(relation), WqlSelect(columns, WqlVar(table), whereKey, where, order)) :: rest => {
+        emitSelect(columns, table, whereKey, where, order, relation) match {
           case head :: Nil => PigAssign(PigVar(relation), head) :: pigify(rest)
           case head :: rest2 => PigAssign(PigVar(relation), head) :: rest2 ++ pigify(rest)
         }

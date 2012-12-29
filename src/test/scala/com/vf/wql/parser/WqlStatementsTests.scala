@@ -58,12 +58,16 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
 
   they should "parse select statement" in {
     implicit val parserToTest = this.select
-    parsing("select * from users") should equal(WqlSelect(List("*"), WqlVar("users"), WqlEmptyWhere(), WqlEmptyOrder()))
-    parsing("select evid from users") should equal(WqlSelect(List("evid"), WqlVar("users"), WqlEmptyWhere(), WqlEmptyOrder()))
-    parsing("select evid from users where src = 3") should equal(WqlSelect(List("evid"), WqlVar("users"), WqlWhere(WqlOper("=", WqlVar("src"), WqlInt(3))), WqlEmptyOrder()))
-    parsing("select evid from users where src = 3 order by evid desc") should equal(WqlSelect(List("evid"), WqlVar("users"), WqlWhere(WqlOper("=", WqlVar("src"), WqlInt(3))), WqlSelectOrder(List((WqlVar("evid"), WqlDirection("desc"))))))
+    parsing("select * from users") should equal(WqlSelect(List("*"), WqlVar("users"), WqlEmptyWhere(), WqlEmptyWhere(), WqlEmptyOrder()))
+    parsing("select evid from users") should equal(WqlSelect(List("evid"), WqlVar("users"), WqlEmptyWhere(), WqlEmptyWhere(), WqlEmptyOrder()))
+    parsing("select evid from users where src = 3") should equal(WqlSelect(List("evid"), WqlVar("users"), WqlEmptyWhere(), WqlWhere(WqlOper("=", WqlVar("src"), WqlInt(3))), WqlEmptyOrder()))
+    parsing("select evid from users where src = 3 order by evid desc") should equal(WqlSelect(List("evid"), WqlVar("users"), WqlEmptyWhere(), WqlWhere(WqlOper("=", WqlVar("src"), WqlInt(3))), WqlSelectOrder(List((WqlVar("evid"), WqlDirection("desc"))))))
 
-    parsing("select evid, uuid from users") should equal(WqlSelect(List("evid", "uuid"), WqlVar("users"), WqlEmptyWhere(), WqlEmptyOrder()))
+    parsing("select evid, uuid from users") should equal(WqlSelect(List("evid", "uuid"), WqlVar("users"), WqlEmptyWhere(), WqlEmptyWhere(), WqlEmptyOrder()))
+
+    parsing("select evid from users wherekey src = 3 and date_created between('2012-15-16', '2012-16-18')") should equal(
+      WqlSelect(List("evid"), WqlVar("users"), WqlWhereKey("3", "2012-15-16", "2012-16-18"), WqlEmptyWhere(), WqlEmptyOrder())
+    )
   }
 
   they should "parse simple condition expressions" in {
