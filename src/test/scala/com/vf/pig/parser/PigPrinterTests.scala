@@ -100,4 +100,8 @@ class PigPrinterTests extends PigPrinter with ShouldMatchers with FlatSpec {
     pigToString(PigForeach(PigVar("users"), List("evid"), PigSchema(List("evid"), List("long")))) should
       equal("foreach users generate evid as (evid:long)")
   }
+
+  they should "print string expressions" in {
+    pigToString(PigString("Firefox")) should equal("\"Firefox\"")
+  }
 }

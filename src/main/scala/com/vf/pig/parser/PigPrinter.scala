@@ -17,6 +17,7 @@ trait PigPrinter {
         "filter " + name + " by " + pigToString(condition)
       }
       case PigInt(value) => value.toString
+      case PigString(value) => "\"" + value + "\""
       case PigVar(name) => name
       case PigEmptyCondition() => ""
 
