@@ -95,4 +95,9 @@ class PigPrinterTests extends PigPrinter with ShouldMatchers with FlatSpec {
     pigToString(PigJoin(List((PigVar("x"), PigVar("y")), (PigVar("z"), PigVar("k"))))) should
       equal("join x by y, z by k")
   }
+
+  they should "print foreach statements" in {
+    pigToString(PigForeach(PigVar("users"), List("evid"), PigSchema(List("evid"), List("long")))) should
+      equal("foreach users generate evid as (evid:long);")
+  }
 }

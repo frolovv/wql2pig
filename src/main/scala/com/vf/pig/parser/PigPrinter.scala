@@ -16,14 +16,16 @@ trait PigPrinter {
       case PigFilter(PigVar(name), condition: Pig) => {
         "filter " + name + " by " + pigToString(condition)
       }
-      case Equality() => "=="
-      case ColumnFilterEquality() => "="
       case PigInt(value) => value.toString
       case PigVar(name) => name
       case PigEmptyCondition() => ""
 
 
       case PigAssign(PigVar(name), value) => name + " = " + pigToString(value) + semicolumn
+
+      case PigForeach(PigVar(relation), columns, as) => {
+        "foreach " + relation + " generate " + columns.mkString(", ") + " as " + pigToString(as) + semicolumn
+      }
 
       case PigAnd(left: PigCondition, right: PigCondition) => {
         "(" + pigToString(left) + ") and (" + pigToString(right) + ")"
