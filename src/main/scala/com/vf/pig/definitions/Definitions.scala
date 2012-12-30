@@ -36,9 +36,6 @@ case class PigOper(oper: String, field: Pig, value: Pig) extends PigCondition
 
 case class PigEmptyCondition() extends PigCondition
 
-case class Equality() extends Pig
-case class ColumnFilterEquality() extends Pig
-
 case class PigInt(value: Int) extends Pig
 
 case class PigString(value : String) extends Pig
