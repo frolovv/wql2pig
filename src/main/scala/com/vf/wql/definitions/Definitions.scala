@@ -12,6 +12,8 @@ abstract sealed class LiteralWqlExpr extends WqlExpr
 
 case class WqlString(str: String) extends LiteralWqlExpr
 
+case class WqlNull() extends LiteralWqlExpr
+
 case class WqlInt(value: Int) extends LiteralWqlExpr
 
 case class WqlBoolean(value: Boolean) extends LiteralWqlExpr

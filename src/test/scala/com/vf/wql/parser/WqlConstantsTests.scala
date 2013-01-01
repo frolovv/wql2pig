@@ -66,4 +66,8 @@ class WqlConstantsTests extends WqlConstants with ShouldMatchers with FlatSpec {
     assertFail("'F123alse")
   }
 
+  they should "parse null literals" in {
+    implicit val parserToTest = this.wqlnull
+    parsing("null") should equal(WqlNull())
+  }
 }

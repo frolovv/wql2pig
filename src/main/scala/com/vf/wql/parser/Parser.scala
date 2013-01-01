@@ -26,10 +26,12 @@ trait WqlConstants extends util.parsing.combinator.RegexParsers {
   val string: Parser[WqlString] = ("""'""" + """(\w|-)*""" + """'""").r ^^ {
     s => WqlString(unquote(s))
   }
+  val wqlnull: Parser[WqlNull] = "null".r ^^ (_ => WqlNull())
+
   val ident: Parser[WqlVar] = ("""[a-zA-Z_=*](\w|=)*""".r | failure("couldn't parse identifier")) ^^ {
     s => WqlVar(s)
   }
-  val const: Parser[LiteralWqlExpr] = (boolean | integer | string | failure("couldn't parse constant"))
+  val const: Parser[LiteralWqlExpr] = (boolean | integer | string | wqlnull | failure("couldn't parse constant"))
 }
 
 trait WqlStatements extends WqlConstants {
@@ -80,7 +82,7 @@ trait WqlStatements extends WqlConstants {
   val where: Parser[WqlAbstractWhere] = "where" ~> condition ^^ (cond => WqlWhere(cond))
 
   val wherekey: Parser[WqlAbstractWhere] = "wherekey" ~ "src" ~ "=" ~ integer ~ "and" ~ "date_created" ~ "between" ~ "(" ~ string ~ "," ~ string ~ ")" ^^ {
-    case "wherekey" ~ "src" ~ "=" ~ src  ~ "and" ~ "date_created" ~ "between" ~ "(" ~ (start: WqlString) ~ "," ~ (stop: WqlString) ~ ")" => {
+    case "wherekey" ~ "src" ~ "=" ~ src ~ "and" ~ "date_created" ~ "between" ~ "(" ~ (start: WqlString) ~ "," ~ (stop: WqlString) ~ ")" => {
       WqlWhereKey(src.value.toString, start.str, stop.str)
     }
   }
