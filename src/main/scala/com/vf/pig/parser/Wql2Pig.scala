@@ -31,16 +31,24 @@ trait Wql2Pig {
 
     whereKey match {
       case WqlWhereKey(src, start, end) =>
-        result += PigLoad(PigVar("wix-bi"), PigWixTableLoader(table, PigKeyFilter(start, end, src.toInt), PigColumnFilter(pigify(where).asInstanceOf[PigCondition]), columns), createSchema(columns))
-      case WqlEmptyWhere() => result += PigForeach(PigVar(table), columns, createSchema(columns))
+        result += PigLoad(PigVar("wix-bi"),
+          PigWixTableLoader(table,
+            PigKeyFilter(start, end, src.toInt),
+            PigColumnFilter(pigify(where).asInstanceOf[PigCondition]), columns),
+          createSchema(columns))
+      case WqlEmptyWhere() => {
+        result += PigForeach(PigVar(table), columns, createSchema(columns))
+
+        where match {
+          case WqlWhere(condition) => {
+            result += PigAssign(PigVar(relation), PigFilter(PigVar(relation), pigify(condition)))
+          }
+          case _ => {}
+        }
+      }
     }
 
-    where match {
-      case WqlWhere(condition) => {
-        result += PigAssign(PigVar(relation), PigFilter(PigVar(relation), pigify(condition)))
-      }
-      case _ => {}
-    }
+
     order match {
       case WqlSelectOrder(orders) => {
         val mapped = orders map {
@@ -63,6 +71,7 @@ trait Wql2Pig {
       case WqlString(s) => PigString(s)
       case WqlEmptyWhere() => PigEmptyCondition()
 
+      case WqlWhere(condition) => pigify(condition)
       case WqlJoin(tablesAndColumns) => {
         val mapped = tablesAndColumns map {
           case (WqlVar(table), WqlVar(col)) => (PigVar(table), PigVar(col))
