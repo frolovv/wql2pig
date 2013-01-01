@@ -9,6 +9,15 @@ import com.vf.pig.definitions._
 trait PigPrinter {
   private val semicolumn = ";"
 
+  def addPrefixTo(condition: PigCondition, prefix: String): PigCondition = {
+    condition match {
+      case PigAnd(left, right) => PigAnd(addPrefixTo(left, prefix), addPrefixTo(right, prefix))
+      case PigOr(left, right) => PigOr(addPrefixTo(left, prefix), addPrefixTo(right, prefix))
+      case PigOper(oper, PigVar(x), value) => PigOper(oper, PigVar(prefix + x), value)
+      case PigOper(oper, value, PigVar(x)) => PigOper(oper, value, PigVar(prefix + x))
+    }
+  }
+
   def pigToString(expr: Pig): String = {
     expr match {
       case PigDump(PigVar(name)) => "dump " + name + semicolumn
@@ -100,7 +109,9 @@ trait PigPrinter {
         }
         val joined = mapped.mkString(" ")
 
-        pigToString(PigUdf("TableLoader", List(PigVar(table), keyFilter, columnFilter, PigVar(joined))))
+        val withPrefix = addPrefixTo(columnFilter.conditions, "event:")
+
+        pigToString(PigUdf("TableLoader", List(PigVar(table), keyFilter, withPrefix, PigVar(joined))))
       }
 
       case PigSchema(names, types) =>

@@ -77,14 +77,14 @@ class PigPrinterTests extends PigPrinter with ShouldMatchers with FlatSpec {
   they should "print table loader statements" in {
     pigToString(PigWixTableLoader("users_by_src",
       PigKeyFilter("2012-12-12 00:00", "2012-12-12 01:00", 42),
-      PigColumnFilter(PigOper("=", PigVar("event:evid"), PigInt(100))),
+      PigColumnFilter(PigOper("=", PigVar("evid"), PigInt(100))),
       List("uuid", "evid"))) should
       equal("TableLoader('users_by_src',\n\t'date_created between (\"2012-12-12 00:00\", \"2012-12-12 01:00\") and src = 42',\n\t" +
         "'event:evid = 100',\n\t" + "'event:uuid event:evid')")
   }
   they should "print columnfilter statements" in {
-    pigToString(PigColumnFilter(PigOper("=", PigVar("event:evid"), PigInt(100)))) should
-      equal("event:evid = 100")
+    pigToString(PigColumnFilter(PigOper("=", PigVar("evid"), PigInt(100)))) should
+      equal("evid = 100")
   }
   they should "print keyfilter statements" in {
     pigToString(PigKeyFilter("2012-12-12 00:00", "2012-12-12 01:00", 42)) should
