@@ -79,9 +79,9 @@ trait WqlStatements extends WqlConstants {
 
   val where: Parser[WqlAbstractWhere] = "where" ~> condition ^^ (cond => WqlWhere(cond))
 
-  val wherekey: Parser[WqlAbstractWhere] = "wherekey" ~ oper ~ "and" ~ "date_created" ~ "between" ~ "(" ~ string ~ "," ~ string ~ ")" ^^ {
-    case "wherekey" ~ WqlOper("=", WqlVar("src"), WqlInt(src)) ~ "and" ~ "date_created" ~ "between" ~ "(" ~ (start: WqlString) ~ "," ~ (stop: WqlString) ~ ")" => {
-      WqlWhereKey(src.toString, start.str, stop.str)
+  val wherekey: Parser[WqlAbstractWhere] = "wherekey" ~ "src" ~ "=" ~ integer ~ "and" ~ "date_created" ~ "between" ~ "(" ~ string ~ "," ~ string ~ ")" ^^ {
+    case "wherekey" ~ "src" ~ "=" ~ src  ~ "and" ~ "date_created" ~ "between" ~ "(" ~ (start: WqlString) ~ "," ~ (stop: WqlString) ~ ")" => {
+      WqlWhereKey(src.value.toString, start.str, stop.str)
     }
   }
 

@@ -68,6 +68,10 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
     parsing("select evid from users wherekey src = 3 and date_created between('2012-15-16', '2012-16-18')") should equal(
       WqlSelect(List("evid"), WqlVar("users"), WqlWhereKey("3", "2012-15-16", "2012-16-18"), WqlEmptyWhere(), WqlEmptyOrder())
     )
+
+    parsing("select evid from users wherekey src=3 and date_created between ('2012-15-16','2012-16-18')") should equal(
+      WqlSelect(List("evid"), WqlVar("users"), WqlWhereKey("3", "2012-15-16", "2012-16-18"), WqlEmptyWhere(), WqlEmptyOrder())
+    )
   }
 
   they should "parse simple condition expressions" in {
