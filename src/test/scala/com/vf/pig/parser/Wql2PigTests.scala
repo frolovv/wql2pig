@@ -44,6 +44,16 @@ class Wql2PigTests extends Wql2Pig with ShouldMatchers with FlatSpec with WqlPar
             PigColumnFilter(PigOper("=", PigVar("evid"), PigInt(100))),
             List("evid")),
           PigSchema(List("evid"), List("long"))))))
+
+    parsing("x = select evid from users wherekey src = 3 and date_created between('2012-15-16', '2012-16-18') where evid = 100 order by evid desc") should equal(
+      List(PigAssign(PigVar("x"),
+        PigLoad(PigVar("wix-bi"),
+          PigWixTableLoader("users",
+            PigKeyFilter("2012-15-16", "2012-16-18", 3),
+            PigColumnFilter(PigOper("=", PigVar("evid"), PigInt(100))),
+            List("evid")),
+          PigSchema(List("evid"), List("long")))),
+      PigAssign(PigVar("x"), PigOrder(PigVar("x"), List((PigVar("evid"), PigDirection("desc"))), PigParallel(3)))))
   }
 
   it should "pigify order statements" in {
