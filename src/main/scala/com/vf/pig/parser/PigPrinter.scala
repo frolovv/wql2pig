@@ -15,6 +15,7 @@ trait PigPrinter {
       case PigOr(left, right) => PigOr(addPrefixTo(left, prefix), addPrefixTo(right, prefix))
       case PigOper(oper, PigVar(x), value) => PigOper(oper, PigVar(prefix + x), value)
       case PigOper(oper, value, PigVar(x)) => PigOper(oper, value, PigVar(prefix + x))
+      case PigEmptyCondition() => PigEmptyCondition()
     }
   }
 

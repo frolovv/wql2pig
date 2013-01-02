@@ -47,6 +47,8 @@ case class WqlOr(left : WqlCondition, right : WqlCondition) extends WqlCondition
 
 case class WqlOper(oper: String, left: WqlExpr, right: WqlExpr) extends WqlCondition
 
+case class WqlOperNull(what: WqlExpr, isnull : Option[String]) extends WqlCondition
+
 case class WqlJoin(tablesAndColumns : List[(WqlVar, WqlVar)]) extends WqlExpr
 
 case class WqlFilter(relation : WqlVar, conditions : WqlCondition) extends WqlExpr

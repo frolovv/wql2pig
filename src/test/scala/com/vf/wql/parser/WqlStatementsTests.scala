@@ -95,10 +95,19 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
     parsing("(x = 2) or (y = 3)") should equal(WqlOr(WqlOper("=", WqlVar("x"), WqlInt(2)), WqlOper("=", WqlVar("y"), WqlInt(3))))
   }
 
+  they should "parse is null expressions" in {
+    implicit val parserToTest = this.opernull
+    parsing("x is null") should equal(WqlOperNull(WqlVar("x"), None))
+    parsing("x is not null") should equal(WqlOperNull(WqlVar("x"), Some("not")))
+  }
+
   they should "parse complex conditional expressions" in {
     implicit val parserToTest = this.condition
     parsing("x = 2 and (x = 4 or y = 5)") should equal(WqlAnd(WqlOper("=", WqlVar("x"), WqlInt(2)), WqlOr(WqlOper("=", WqlVar("x"), WqlInt(4)), WqlOper("=", WqlVar("y"), WqlInt(5)))))
     parsing("x = 2 and y = 3 and z = 6") should equal(WqlAnd(WqlOper("=", WqlVar("x"), WqlInt(2)), WqlAnd(WqlOper("=", WqlVar("y"), WqlInt(3)), WqlOper("=", WqlVar("z"), WqlInt(6)))))
+
+    parsing("x = 2 and y = 3 and z = 6 and k is not null") should equal(WqlAnd(WqlOper("=", WqlVar("x"), WqlInt(2)), WqlAnd(WqlOper("=", WqlVar("y"), WqlInt(3)), WqlAnd(WqlOper("=", WqlVar("z"), WqlInt(6)), WqlOperNull(WqlVar("k"), Some("not"))))))
+
   }
 
   they should "parse where expressions" in {
@@ -119,4 +128,5 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
     parsing("filter users by evid == 104") should equal(WqlFilter(WqlVar("users"), WqlOper("==", WqlVar("evid"), WqlInt(104))))
     parsing("filter users by (evid == 104) and src == 3") should equal(WqlFilter(WqlVar("users"), WqlAnd(WqlOper("==", WqlVar("evid"), WqlInt(104)), WqlOper("==", WqlVar("src"), WqlInt(3)))))
   }
+
 }
