@@ -84,7 +84,7 @@ trait WqlStatements extends WqlConstants {
     case cond1 ~ "or" ~ cond2 => WqlOr(cond1, cond2)
   }
 
-  val condition: Parser[WqlCondition] = ((and | or | oper | opernull) | ("(" ~> condition <~ ")")) ^^ {
+  val condition: Parser[WqlCondition] = ((and | or | opernull | oper ) | ("(" ~> condition <~ ")")) ^^ {
     case cond: WqlCondition => cond
   }
 
