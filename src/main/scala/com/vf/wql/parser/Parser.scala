@@ -2,6 +2,8 @@ package com.vf.wql.parser
 
 import util.parsing.input.CharSequenceReader
 import com.vf.wql.definitions._
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 
 
 /**
@@ -88,9 +90,12 @@ trait WqlStatements extends WqlConstants {
 
   val where: Parser[WqlAbstractWhere] = "where" ~> condition ^^ (cond => WqlWhere(cond))
 
-  val wherekey: Parser[WqlAbstractWhere] = "wherekey" ~ "src" ~ "=" ~ integer ~ "and" ~ "date_created" ~ "between" ~ "(" ~ string ~ "," ~ string ~ ")" ^^ {
-    case "wherekey" ~ "src" ~ "=" ~ src ~ "and" ~ "date_created" ~ "between" ~ "(" ~ (start: WqlString) ~ "," ~ (stop: WqlString) ~ ")" => {
-      WqlWhereKey(src.value.toString, start.str, stop.str)
+  val wherekey: Parser[WqlAbstractWhere] = (((("wherekey" ~ "src" ~ "=") ~> integer) ~ (("and" ~ "date_created" ~ "between" ~ "(") ~> string) ~ ("," ~> string <~ ")")) | (("wherekey" ~ "src" ~ "=") ~> integer)) ^^ {
+    case (src: WqlInt) ~ (start: WqlString) ~ (end: WqlString) => WqlWhereKey(src.value.toString, start.str, end.str)
+    case (src: WqlInt) => {
+      val fmt = DateTimeFormat.forPattern("yyyy-MM-dd");
+      val dt = new DateTime()
+      WqlWhereKey(src.value.toString, fmt.print(dt.minusDays(1)), fmt.print(dt))
     }
   }
 
