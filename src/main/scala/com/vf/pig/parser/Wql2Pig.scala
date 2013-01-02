@@ -96,7 +96,7 @@ trait Wql2Pig {
   def pigify(wqls: List[WqlExpr]): List[Pig] = {
     wqls match {
       case Nil => Nil
-      case WqlAssign(WqlVar(relation), WqlSelect(columns, WqlVar(table), whereKey, where, order)) :: rest => {
+      case WqlAssign(WqlVar(relation), WqlSelect(columns, WqlVar(table), whereKey, where, group, order)) :: rest => {
         emitSelect(columns, table, whereKey, where, order, relation) match {
           case head :: Nil => PigAssign(PigVar(relation), head) :: pigify(rest)
           case head :: rest2 => PigAssign(PigVar(relation), head) :: rest2 ++ pigify(rest)

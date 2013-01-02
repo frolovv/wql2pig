@@ -20,7 +20,7 @@ case class WqlBoolean(value: Boolean) extends LiteralWqlExpr
 
 case class WqlAssign(name: WqlVar, expr: WqlExpr) extends WqlExpr
 
-case class WqlSelect(columns: List[String], from: WqlVar, whereKey: WqlAbstractWhere, where: WqlAbstractWhere, order: WqlAbstractOrder) extends WqlExpr
+case class WqlSelect(columns: List[String], from: WqlVar, whereKey: WqlAbstractWhere, where: WqlAbstractWhere, group : WqlAbstractGroup, order: WqlAbstractOrder) extends WqlExpr
 
 abstract sealed class WqlAbstractWhere extends WqlExpr
 
@@ -52,3 +52,7 @@ case class WqlOperNull(what: WqlExpr, isnull : Option[String]) extends WqlCondit
 case class WqlJoin(tablesAndColumns : List[(WqlVar, WqlVar)]) extends WqlExpr
 
 case class WqlFilter(relation : WqlVar, conditions : WqlCondition) extends WqlExpr
+
+abstract sealed class WqlAbstractGroup extends WqlExpr
+case class WqlGroup(fields : List[WqlVar]) extends WqlAbstractGroup
+case class WqlEmptyGroup() extends WqlAbstractGroup

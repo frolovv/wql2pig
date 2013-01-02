@@ -84,7 +84,7 @@ trait WqlStatements extends WqlConstants {
     case cond1 ~ "or" ~ cond2 => WqlOr(cond1, cond2)
   }
 
-  val condition: Parser[WqlCondition] = ((and | or | opernull | oper ) | ("(" ~> condition <~ ")")) ^^ {
+  val condition: Parser[WqlCondition] = ((and | or | opernull | oper) | ("(" ~> condition <~ ")")) ^^ {
     case cond: WqlCondition => cond
   }
 
@@ -93,21 +93,25 @@ trait WqlStatements extends WqlConstants {
   val wherekey: Parser[WqlAbstractWhere] = (((("wherekey" ~ "src" ~ "=") ~> integer) ~ (("and" ~ "date_created" ~ "between" ~ "(") ~> string) ~ ("," ~> string <~ ")")) | (("wherekey" ~ "src" ~ "=") ~> integer)) ^^ {
     case (src: WqlInt) ~ (start: WqlString) ~ (end: WqlString) => WqlWhereKey(src.value.toString, start.str, end.str)
     case (src: WqlInt) => {
-      val fmt = DateTimeFormat.forPattern("yyyy-MM-dd");
+      val fmt = DateTimeFormat.forPattern("yyyy-MM-dd")
       val dt = new DateTime()
       WqlWhereKey(src.value.toString, fmt.print(dt.minusDays(1)), fmt.print(dt))
     }
+  }
+
+  val group: Parser[WqlGroup] = (("group" ~ "by") ~> ident) ~ (("," ~> ident) *) ^^ {
+    case first ~ rest => WqlGroup(first :: rest)
   }
 
   val filter: Parser[WqlFilter] = ("filter" ~> ident) ~ ("by" ~> condition) ^^ {
     case relation ~ conditions => WqlFilter(relation, conditions)
   }
 
-  val select: Parser[WqlSelect] = "select" ~ ident ~ opt(("," ~> ident) *) ~ "from" ~ ident ~ opt(wherekey) ~ opt(where) ~ opt(order) ^^ {
-    case "select" ~ WqlVar(column) ~ columns ~ "from" ~ relation ~ whereKey ~ whereStmt ~ orderStmt =>
+  val select: Parser[WqlSelect] = "select" ~ ident ~ opt(("," ~> ident) *) ~ "from" ~ ident ~ opt(wherekey) ~ opt(where) ~ opt(group) ~ opt(order) ^^ {
+    case "select" ~ WqlVar(column) ~ columns ~ "from" ~ relation ~ whereKey ~ whereStmt ~ groupStmt ~ orderStmt =>
       WqlSelect(column :: (columns.getOrElse(List()) map {
         case WqlVar(x) => x
-      }), relation, whereKey.getOrElse(WqlEmptyWhere()), whereStmt.getOrElse(WqlEmptyWhere()), orderStmt.getOrElse(WqlEmptyOrder()))
+      }), relation, whereKey.getOrElse(WqlEmptyWhere()), whereStmt.getOrElse(WqlEmptyWhere()), groupStmt.getOrElse(WqlEmptyGroup()), orderStmt.getOrElse(WqlEmptyOrder()))
   }
 }
 
