@@ -83,8 +83,9 @@ class PigPrinterTests extends PigPrinter with ShouldMatchers with FlatSpec {
         "'event:evid = 100',\n\t" + "'event:uuid event:evid')")
   }
   they should "print columnfilter statements" in {
-    pigToString(PigColumnFilter(PigOper("=", PigVar("evid"), PigInt(100)))) should
-      equal("evid = 100")
+    pigToString(PigColumnFilter(PigOper("=", PigVar("evid"), PigInt(100)))) should equal("evid = 100")
+    pigToString(PigOperNull(PigVar("x"), Some("not"))) should equal("x is not null")
+    pigToString(PigOperNull(PigVar("x"), None)) should equal("x is null")
   }
   they should "print keyfilter statements" in {
     pigToString(PigKeyFilter("2012-12-12 00:00", "2012-12-12 01:00", 42)) should

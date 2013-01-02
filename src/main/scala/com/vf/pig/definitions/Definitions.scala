@@ -34,6 +34,8 @@ case class PigOr(left : PigCondition, right : PigCondition) extends PigCondition
 
 case class PigOper(oper: String, field: Pig, value: Pig) extends PigCondition
 
+case class PigOperNull(field : Pig, not : Option[String]) extends PigCondition
+
 case class PigEmptyCondition() extends PigCondition
 
 case class PigInt(value: Int) extends Pig

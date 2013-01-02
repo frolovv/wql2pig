@@ -53,7 +53,7 @@ class Wql2PigTests extends Wql2Pig with ShouldMatchers with FlatSpec with WqlPar
             PigColumnFilter(PigOper("=", PigVar("evid"), PigInt(100))),
             List("evid")),
           PigSchema(List("evid"), List("long")))),
-      PigAssign(PigVar("x"), PigOrder(PigVar("x"), List((PigVar("evid"), PigDirection("desc"))), PigParallel(3)))))
+        PigAssign(PigVar("x"), PigOrder(PigVar("x"), List((PigVar("evid"), PigDirection("desc"))), PigParallel(3)))))
   }
 
   it should "pigify order statements" in {
@@ -68,7 +68,8 @@ class Wql2PigTests extends Wql2Pig with ShouldMatchers with FlatSpec with WqlPar
   it should "pigify filter statements" in {
     parsing("x = filter users by evid = 103") should
       equal(List(PigAssign(PigVar("x"), PigFilter(PigVar("users"), PigOper("=", PigVar("evid"), PigInt(103))))))
+
+    parsing("x = filter users by evid is not null") should
+      equal(List(PigAssign(PigVar("x"), PigFilter(PigVar("users"), PigOperNull(PigVar("evid"), Some("not"))))))
   }
-
-
 }

@@ -66,6 +66,7 @@ trait Wql2Pig {
       case WqlAnd(left, right) => PigAnd(pigify(left).asInstanceOf[PigCondition], pigify(right).asInstanceOf[PigCondition])
       case WqlOr(left, right) => PigOr(pigify(left).asInstanceOf[PigCondition], pigify(right).asInstanceOf[PigCondition])
       case WqlOper(oper, left, right) => PigOper(oper, pigify(left), pigify(right))
+      case WqlOperNull(field, not) => PigOperNull(pigify(field), not)
       case WqlVar(x) => PigVar(x)
       case WqlInt(n) => PigInt(n)
       case WqlString(s) => PigString(s)

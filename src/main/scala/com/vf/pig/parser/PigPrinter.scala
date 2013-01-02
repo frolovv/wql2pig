@@ -15,6 +15,7 @@ trait PigPrinter {
       case PigOr(left, right) => PigOr(addPrefixTo(left, prefix), addPrefixTo(right, prefix))
       case PigOper(oper, PigVar(x), value) => PigOper(oper, PigVar(prefix + x), value)
       case PigOper(oper, value, PigVar(x)) => PigOper(oper, value, PigVar(prefix + x))
+      case PigOperNull(PigVar(x), not) => PigOperNull(PigVar(prefix + x), not)
       case PigEmptyCondition() => PigEmptyCondition()
     }
   }
@@ -46,6 +47,9 @@ trait PigPrinter {
       }
       case PigOper(operator, field, value) =>
         pigToString(field) + " " + operator + " " + pigToString(value)
+
+      case PigOperNull(field, Some(_)) => pigToString(field) + " is not null"
+      case PigOperNull(field, None) => pigToString(field) + " is null"
 
       case PigGroup(PigVar(name), exprs, par) => exprs match {
         case field :: Nil => "group " + name + " by " + field + " " + pigToString(par)
