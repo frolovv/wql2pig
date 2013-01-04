@@ -26,38 +26,49 @@ trait Wql2Pig {
     PigSchema(names, types)
   }
 
-  private def emitSelect(columns: List[String], table: String, whereKey: WqlAbstractWhere, where: WqlAbstractWhere, order: WqlAbstractOrder, relation: String): List[Pig] = {
+  private def emitSelect(selectStmt: WqlAbstractSelect, relation: String): List[Pig] = {
     var result = new ListBuffer[Pig]()
 
-    whereKey match {
-      case WqlWhereKey(src, start, end) =>
-        result += PigLoad(PigVar("wix-bi"),
-          PigWixTableLoader(table,
-            PigKeyFilter(start, end, src.toInt),
-            PigColumnFilter(pigify(where).asInstanceOf[PigCondition]), columns),
-          createSchema(columns))
-      case WqlEmptyWhere() => {
-        result += PigForeach(PigVar(table), columns, createSchema(columns))
-
-        where match {
-          case WqlWhere(condition) => {
+    selectStmt match {
+      case WqlSelect(columns, WqlVar(table)) => result += PigForeach(PigVar(table), columns, createSchema(columns))
+      case WqlSelectWithOrder(select, WqlSelectOrder(orders)) => {
+        result ++= emitSelect(select, relation)
+        val directions = orders map {
+          case (WqlVar(field), WqlDirection(dir)) => Pair(PigVar(field), PigDirection(dir))
+        }
+        result += PigAssign(PigVar(relation), PigOrder(PigVar(relation), directions, PigParallel(3)))
+      }
+      case WqlSelectWithWhere(select, WqlWhere(condition)) => {
+        select match {
+          case s: WqlSelect => {
+            result ++= emitSelect(select, relation)
             result += PigAssign(PigVar(relation), PigFilter(PigVar(relation), pigify(condition)))
           }
-          case _ => {}
+          case s: WqlSelectWithGroup => {
+            result += PigAssign(PigVar(relation), PigFilter(PigVar(relation), pigify(condition)))
+            result ++= emitSelect(select, relation)
+          }
+          case s: WqlSelectWithTBL => {
+            val inner = emitSelect(select, relation)
+            val mapped = inner map {
+              case PigLoad(what, tbl: PigWixTableLoader, as) => {
+                PigLoad(what, PigWixTableLoader(tbl.table, tbl.keyFilter, PigColumnFilter(pigify(condition).asInstanceOf[PigCondition]), tbl.columns), as)
+              }
+              case x => x
+            }
+            result ++= mapped
+          }
         }
+      }
+      case WqlSelectWithTBL(WqlSelect(columns, WqlVar(from)), WqlWhereKey(src, start, end)) => {
+        result += PigLoad(PigVar("wix-bi"),
+          PigWixTableLoader(from,
+            PigKeyFilter(start, end, src.toInt),
+            PigColumnFilter(PigEmptyCondition()), columns),
+          createSchema(columns))
       }
     }
 
-
-    order match {
-      case WqlSelectOrder(orders) => {
-        val mapped = orders map {
-          case (WqlVar(column), WqlDirection(direction)) => (PigVar(column), PigDirection(direction))
-        }
-        result += PigAssign(PigVar(relation), PigOrder(PigVar(relation), mapped, PigParallel(3)))
-      }
-      case _ => {}
-    }
     result.toList
   }
 
@@ -96,8 +107,8 @@ trait Wql2Pig {
   def pigify(wqls: List[WqlExpr]): List[Pig] = {
     wqls match {
       case Nil => Nil
-      case WqlAssign(WqlVar(relation), WqlSelect(columns, WqlVar(table), whereKey, where, group, order)) :: rest => {
-        emitSelect(columns, table, whereKey, where, order, relation) match {
+      case WqlAssign(WqlVar(relation), select: WqlAbstractSelect) :: rest => {
+        emitSelect(select, relation) match {
           case head :: Nil => PigAssign(PigVar(relation), head) :: pigify(rest)
           case head :: rest2 => PigAssign(PigVar(relation), head) :: rest2 ++ pigify(rest)
         }

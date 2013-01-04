@@ -60,25 +60,42 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
 
   they should "parse select statement" in {
     implicit val parserToTest = this.select
+    val select: WqlSelect = WqlSelect(List("evid"), WqlVar("users"))
+
+    parsing("select * from users") should equal(WqlSelect(List("*"), WqlVar("users")))
+    parsing("select evid from users") should equal(select)
+    parsing("select evid from users where src = 3") should equal(WqlSelectWithWhere(select, WqlWhere(WqlOper("=", WqlVar("src"), WqlInt(3)))))
+    parsing("select evid from users where src = 3 order by evid desc") should equal(WqlSelectWithOrder(WqlSelectWithWhere(select, WqlWhere(WqlOper("=", WqlVar("src"), WqlInt(3)))), WqlSelectOrder(List((WqlVar("evid"), WqlDirection("desc"))))))
+
+    parsing("select evid, uuid from users") should equal(WqlSelect(List("evid", "uuid"), WqlVar("users")))
+
+  }
+
+  they should "parse select statements with group clause" in {
+    implicit val parserToTest = this.select
+
+    val select: WqlSelect = WqlSelect(List("evid"), WqlVar("users"))
+    val whereStmt: WqlWhere = WqlWhere(WqlOper("=", WqlVar("evid"), WqlInt(100)))
+    val orderStmt: WqlSelectOrder = WqlSelectOrder(List((WqlVar("evid"), WqlDirection("desc"))))
+    val groupSlct: WqlSelectWithGroup = WqlSelectWithGroup(select, WqlGroup(List(WqlVar("evid"))))
+
+    parsing("select evid from users group by evid") should equal(groupSlct)
+    parsing("select evid from users group by evid order by evid desc") should equal(WqlSelectWithOrder(groupSlct, orderStmt))
+    parsing("select evid from users where evid = 100 group by evid") should equal(WqlSelectWithWhere(groupSlct, whereStmt))
+    parsing("select evid from users where evid = 100 group by evid order by evid desc") should equal(WqlSelectWithOrder(WqlSelectWithWhere(groupSlct, whereStmt), orderStmt))
+  }
+
+  they should "parse select statements with wherekey clause" in {
+    implicit val parserToTest = this.select
     val fmt = DateTimeFormat.forPattern("yyyy-MM-dd");
     val dt = new DateTime()
+    val select: WqlSelect = WqlSelect(List("evid"), WqlVar("users"))
 
-    parsing("select * from users") should equal(WqlSelect(List("*"), WqlVar("users"), WqlEmptyWhere(), WqlEmptyWhere(),WqlEmptyGroup(),  WqlEmptyOrder()))
-    parsing("select evid from users") should equal(WqlSelect(List("evid"), WqlVar("users"), WqlEmptyWhere(), WqlEmptyWhere(), WqlEmptyGroup(), WqlEmptyOrder()))
-    parsing("select evid from users where src = 3") should equal(WqlSelect(List("evid"), WqlVar("users"), WqlEmptyWhere(), WqlWhere(WqlOper("=", WqlVar("src"), WqlInt(3))), WqlEmptyGroup(), WqlEmptyOrder()))
-    parsing("select evid from users where src = 3 order by evid desc") should equal(WqlSelect(List("evid"), WqlVar("users"), WqlEmptyWhere(), WqlWhere(WqlOper("=", WqlVar("src"), WqlInt(3))), WqlEmptyGroup(), WqlSelectOrder(List((WqlVar("evid"), WqlDirection("desc"))))))
-    parsing("select evid, uuid from users") should equal(WqlSelect(List("evid", "uuid"), WqlVar("users"), WqlEmptyWhere(), WqlEmptyWhere(), WqlEmptyGroup(), WqlEmptyOrder()))
     parsing("select evid from users wherekey src = 3 and date_created between('2012-15-16', '2012-16-18')") should equal(
-      WqlSelect(List("evid"), WqlVar("users"), WqlWhereKey("3", "2012-15-16", "2012-16-18"), WqlEmptyWhere(), WqlEmptyGroup(), WqlEmptyOrder())
-    )
-
-    parsing("select evid from users wherekey src=3 and date_created between ('2012-15-16','2012-16-18')") should equal(
-      WqlSelect(List("evid"), WqlVar("users"), WqlWhereKey("3", "2012-15-16", "2012-16-18"), WqlEmptyWhere(), WqlEmptyGroup(), WqlEmptyOrder())
-    )
+      WqlSelectWithTBL(select, WqlWhereKey("3", "2012-15-16", "2012-16-18")))
 
     parsing("select evid from users wherekey src = 3") should equal(
-      WqlSelect(List("evid"), WqlVar("users"), WqlWhereKey("3", fmt.print(dt.minusDays(1)), fmt.print(dt)), WqlEmptyWhere(), WqlEmptyGroup(), WqlEmptyOrder())
-    )
+      WqlSelectWithTBL(select, WqlWhereKey("3", fmt.print(dt.minusDays(1)), fmt.print(dt))))
   }
 
   they should "parse simple condition expressions" in {

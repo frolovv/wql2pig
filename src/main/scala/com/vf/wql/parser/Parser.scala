@@ -107,11 +107,36 @@ trait WqlStatements extends WqlConstants {
     case relation ~ conditions => WqlFilter(relation, conditions)
   }
 
-  val select: Parser[WqlSelect] = "select" ~ ident ~ opt(("," ~> ident) *) ~ "from" ~ ident ~ opt(wherekey) ~ opt(where) ~ opt(group) ~ opt(order) ^^ {
-    case "select" ~ WqlVar(column) ~ columns ~ "from" ~ relation ~ whereKey ~ whereStmt ~ groupStmt ~ orderStmt =>
-      WqlSelect(column :: (columns.getOrElse(List()) map {
-        case WqlVar(x) => x
-      }), relation, whereKey.getOrElse(WqlEmptyWhere()), whereStmt.getOrElse(WqlEmptyWhere()), groupStmt.getOrElse(WqlEmptyGroup()), orderStmt.getOrElse(WqlEmptyOrder()))
+  val select: Parser[WqlAbstractSelect] = "select" ~ ident ~ opt(("," ~> ident) *) ~ "from" ~ ident ~ opt(wherekey) ~ opt(where) ~ opt(group) ~ opt(order) ^^ {
+    case "select" ~ WqlVar(column) ~ columns ~ "from" ~ relation ~ None ~ whereStmt ~ groupStmt ~ orderStmt => {
+      var result: WqlAbstractSelect = WqlSelect(column :: columns.getOrElse(Nil).map(_.name), relation)
+      groupStmt match {
+        case Some(group: WqlGroup) => result = WqlSelectWithGroup(result, group)
+        case None => {}
+      }
+      whereStmt match {
+        case Some(where: WqlWhere) => result = WqlSelectWithWhere(result, where)
+        case None => {}
+      }
+      orderStmt match {
+        case Some(order: WqlSelectOrder) => result = WqlSelectWithOrder(result, order)
+        case None => {}
+      }
+      result
+    }
+    case "select" ~ WqlVar(column) ~ columns ~ "from" ~ relation ~ Some(whereKey: WqlWhereKey) ~ whereStmt ~ None ~ orderStmt => {
+      var result: WqlAbstractSelect = WqlSelect(column :: columns.getOrElse(Nil).map(_.name), relation)
+      result = WqlSelectWithTBL(result, whereKey)
+      whereStmt match {
+        case Some(where: WqlWhere) => result = WqlSelectWithWhere(result, where)
+        case None => {}
+      }
+      orderStmt match {
+        case Some(order: WqlSelectOrder) => result = WqlSelectWithOrder(result, order)
+        case None => {}
+      }
+      result
+    }
   }
 }
 
