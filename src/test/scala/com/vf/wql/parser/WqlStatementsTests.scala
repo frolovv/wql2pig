@@ -87,7 +87,7 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
 
   they should "parse select statements with wherekey clause" in {
     implicit val parserToTest = this.select
-    val fmt = DateTimeFormat.forPattern("yyyy-MM-dd");
+    val fmt = DateTimeFormat.forPattern("yyyy-MM-dd")
     val dt = new DateTime()
     val select: WqlSelect = WqlSelect(List("evid"), WqlVar("users"))
 
