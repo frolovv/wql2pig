@@ -30,22 +30,24 @@ trait Wql2Pig {
     var result = new ListBuffer[Pig]()
 
     selectStmt match {
-      case WqlSelect(columns, WqlVar(table)) => result += PigForeach(PigVar(table), columns, createSchema(columns))
+      case WqlSelect(columns, WqlVar(table)) => {
+        result += PigForeach(PigVar(table), columns, createSchema(columns))
+      }
       case WqlSelectWithOrder(select, WqlSelectOrder(orders)) => {
         result ++= emitSelect(select, relation)
         val directions = orders map {
           case (WqlVar(field), WqlDirection(dir)) => Pair(PigVar(field), PigDirection(dir))
         }
-        result += PigAssign(PigVar(relation), PigOrder(PigVar(relation), directions, PigParallel(3)))
+        result += PigOrder(PigVar(relation), directions, PigParallel(3))
       }
       case WqlSelectWithWhere(select, WqlWhere(condition)) => {
         select match {
           case s: WqlSelect => {
             result ++= emitSelect(select, relation)
-            result += PigAssign(PigVar(relation), PigFilter(PigVar(relation), pigify(condition)))
+            result += PigFilter(PigVar(relation), pigify(condition))
           }
           case s: WqlSelectWithGroup => {
-            result += PigAssign(PigVar(relation), PigFilter(PigVar(relation), pigify(condition)))
+            result += PigFilter(PigVar(relation), pigify(condition))
             result ++= emitSelect(select, relation)
           }
           case s: WqlSelectWithTBL => {
@@ -66,6 +68,16 @@ trait Wql2Pig {
             PigKeyFilter(start, end, src.toInt),
             PigColumnFilter(PigEmptyCondition()), columns),
           createSchema(columns))
+      }
+      case WqlSelectWithGroup(select, WqlGroup(fields)) => {
+        select match {
+          case WqlSelect(columns, from) => {
+            val grp = PigGroup(PigVar(from.name), fields map (_.name), PigParallel(3))
+            val slct = WqlSelect(columns, WqlVar(relation))
+            result += grp
+            result ++= emitSelect(slct, relation)
+          }
+        }
       }
     }
 
@@ -108,10 +120,8 @@ trait Wql2Pig {
     wqls match {
       case Nil => Nil
       case WqlAssign(WqlVar(relation), select: WqlAbstractSelect) :: rest => {
-        emitSelect(select, relation) match {
-          case head :: Nil => PigAssign(PigVar(relation), head) :: pigify(rest)
-          case head :: rest2 => PigAssign(PigVar(relation), head) :: rest2 ++ pigify(rest)
-        }
+        val mapped = emitSelect(select, relation) map (PigAssign(PigVar(relation), _))
+        mapped ++ pigify(rest)
       }
       case WqlAssign(WqlVar(name), expr: WqlExpr) :: rest => {
         PigAssign(PigVar(name), pigify(expr)) :: pigify(rest)
