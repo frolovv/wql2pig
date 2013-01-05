@@ -6,7 +6,7 @@ package com.vf.wql.definitions
  */
 abstract sealed class WqlExpr
 
-abstract sealed class WqlEvaluated() extends WqlExpr
+abstract sealed class WqlEvaluated extends WqlExpr
 
 case class WqlVar(name: String) extends WqlEvaluated
 
