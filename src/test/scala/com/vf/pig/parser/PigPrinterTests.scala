@@ -39,7 +39,7 @@ class PigPrinterTests extends PigPrinter with ShouldMatchers with FlatSpec {
 
   they should "print load statements" in {
     pigToString(PigLoad(PigVar("wix-bi"), PigUdf("TableLoader", List(PigVar("users_by_src"))), PigSchema(List("uuid"), List("chararray")))) should
-      equal("load 'wix-bi' using TableLoader('users_by_src') as (uuid:chararray)")
+      equal("load 'wix-bi' using TableLoader(users_by_src) as (uuid:chararray)")
   }
 
   they should "print group statements" in {
@@ -49,7 +49,7 @@ class PigPrinterTests extends PigPrinter with ShouldMatchers with FlatSpec {
 
   they should "print assign statements" in {
     pigToString(PigAssign(PigVar("events"), PigLoad(PigVar("wix-bi"), PigUdf("TableLoader", List(PigVar("users_by_src"))), PigSchema(List("uuid"), List("chararray"))))) should
-      equal("events = load 'wix-bi' using TableLoader('users_by_src') as (uuid:chararray);")
+      equal("events = load 'wix-bi' using TableLoader(users_by_src) as (uuid:chararray);")
   }
 
   they should "print limit statements" in {
@@ -72,7 +72,7 @@ class PigPrinterTests extends PigPrinter with ShouldMatchers with FlatSpec {
   }
   they should "print store statements" in {
     pigToString(PigStore(PigVar("events"), PigVar("wix-bi"), PigUdf("PigStorage", List(PigVar("\t"))))) should
-      equal("store events into 'wix-bi' using PigStorage('\t');")
+      equal("store events into 'wix-bi' using PigStorage(\t);")
   }
   they should "print table loader statements" in {
     pigToString(PigWixTableLoader("users_by_src",
