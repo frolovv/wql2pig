@@ -26,7 +26,7 @@ case class WqlAssign(name: WqlVar, expr: WqlExpr) extends WqlExpr
 
 abstract sealed class WqlAbstractSelect() extends WqlExpr
 
-case class WqlSelect(columns: List[String], from: WqlVar) extends WqlAbstractSelect
+case class WqlSelect(columns: List[WqlEvaluated], from: WqlVar) extends WqlAbstractSelect
 
 case class WqlSelectWithWhere(select: WqlAbstractSelect, where: WqlWhere) extends WqlAbstractSelect
 

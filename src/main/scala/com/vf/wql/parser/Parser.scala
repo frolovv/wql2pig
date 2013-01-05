@@ -113,9 +113,9 @@ trait WqlStatements extends WqlConstants {
     case relation ~ conditions => WqlFilter(relation, conditions)
   }
 
-  val select: Parser[WqlAbstractSelect] = "select" ~ ident ~ opt(("," ~> ident) *) ~ "from" ~ ident ~ opt(wherekey) ~ opt(where) ~ opt(group) ~ opt(order) ^^ {
-    case "select" ~ WqlVar(column) ~ columns ~ "from" ~ relation ~ None ~ whereStmt ~ groupStmt ~ orderStmt => {
-      var result: WqlAbstractSelect = WqlSelect(column :: columns.getOrElse(Nil).map(_.name), relation)
+  val select: Parser[WqlAbstractSelect] = "select" ~ evaluated ~ opt(("," ~> evaluated) *) ~ "from" ~ ident ~ opt(wherekey) ~ opt(where) ~ opt(group) ~ opt(order) ^^ {
+    case "select" ~ column ~ columns ~ "from" ~ relation ~ None ~ whereStmt ~ groupStmt ~ orderStmt => {
+      var result: WqlAbstractSelect = WqlSelect(column :: columns.getOrElse(Nil), relation)
 
       if (groupStmt.isDefined)
         result = WqlSelectWithGroup(result, groupStmt.get)
@@ -125,8 +125,8 @@ trait WqlStatements extends WqlConstants {
         result = WqlSelectWithOrder(result, orderStmt.get.asInstanceOf[WqlSelectOrder])
       result
     }
-    case "select" ~ WqlVar(column) ~ columns ~ "from" ~ relation ~ Some(whereKey: WqlWhereKey) ~ whereStmt ~ None ~ orderStmt => {
-      var result: WqlAbstractSelect = WqlSelect(column :: columns.getOrElse(Nil).map(_.name), relation)
+    case "select" ~ column ~ columns ~ "from" ~ relation ~ Some(whereKey: WqlWhereKey) ~ whereStmt ~ None ~ orderStmt => {
+      var result: WqlAbstractSelect = WqlSelect(column :: columns.getOrElse(Nil), relation)
       result = WqlSelectWithTBL(result, whereKey)
       if (whereStmt.isDefined)
         result = WqlSelectWithWhere(result, whereStmt.get)
