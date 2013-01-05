@@ -60,21 +60,21 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
 
   they should "parse select statement" in {
     implicit val parserToTest = this.select
-    val select: WqlSelect = WqlSelect(List("evid"), WqlVar("users"))
+    val select: WqlSelect = WqlSelect(List(WqlVar("evid")), WqlVar("users"))
 
-    parsing("select * from users") should equal(WqlSelect(List("*"), WqlVar("users")))
+    parsing("select * from users") should equal(WqlSelect(List(WqlVar("*")), WqlVar("users")))
     parsing("select evid from users") should equal(select)
     parsing("select evid from users where src = 3") should equal(WqlSelectWithWhere(select, WqlWhere(WqlOper("=", WqlVar("src"), WqlInt(3)))))
     parsing("select evid from users where src = 3 order by evid desc") should equal(WqlSelectWithOrder(WqlSelectWithWhere(select, WqlWhere(WqlOper("=", WqlVar("src"), WqlInt(3)))), WqlSelectOrder(List((WqlVar("evid"), WqlDirection("desc"))))))
 
-    parsing("select evid, uuid from users") should equal(WqlSelect(List("evid", "uuid"), WqlVar("users")))
+    parsing("select evid, uuid from users") should equal(WqlSelect(List(WqlVar("evid"), WqlVar("uuid")), WqlVar("users")))
 
   }
 
   they should "parse select statements with group clause" in {
     implicit val parserToTest = this.select
 
-    val select: WqlSelect = WqlSelect(List("evid"), WqlVar("users"))
+    val select: WqlSelect = WqlSelect(List(WqlVar("evid")), WqlVar("users"))
     val whereStmt: WqlWhere = WqlWhere(WqlOper("=", WqlVar("evid"), WqlInt(100)))
     val orderStmt: WqlSelectOrder = WqlSelectOrder(List((WqlVar("evid"), WqlDirection("desc"))))
     val groupSlct: WqlSelectWithGroup = WqlSelectWithGroup(select, WqlGroup(List(WqlVar("evid"))))
@@ -90,7 +90,7 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
     implicit val parserToTest = this.select
     val fmt = DateTimeFormat.forPattern("yyyy-MM-dd")
     val dt = new DateTime()
-    val select: WqlSelect = WqlSelect(List("evid"), WqlVar("users"))
+    val select: WqlSelect = WqlSelect(List(WqlVar("evid")), WqlVar("users"))
 
     parsing("select evid from users wherekey src = 3 and date_created between('2012-15-16', '2012-16-18')") should equal(
       WqlSelectWithTBL(select, WqlWhereKey("3", "2012-15-16", "2012-16-18")))

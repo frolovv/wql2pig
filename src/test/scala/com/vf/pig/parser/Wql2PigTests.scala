@@ -17,16 +17,20 @@ class Wql2PigTests extends Wql2Pig with ShouldMatchers with FlatSpec with WqlPar
     pigify(wqls)
   }
 
+  def PigVars(vars : String*):List[PigVar] = {
+    vars map (PigVar(_)) toList
+  }
+
   "Wql2Pig" should "pigify select statements" in {
-    val assign: PigAssign = PigAssign(PigVar("x"), PigForeach(PigVar("users"), List("evid"), PigSchema(List("evid"), List("long"))))
+    val assign: PigAssign = PigAssign(PigVar("x"), PigForeach(PigVar("users"), PigVars("evid"), PigSchema(List("evid"), List("long"))))
     val filter: PigAssign = PigAssign(PigVar("x"), PigFilter(PigVar("x"), PigOper("=", PigVar("evid"), PigInt(4))))
     val order: PigAssign = PigAssign(PigVar("x"), PigOrder(PigVar("x"), List((PigVar("evid"), PigDirection("desc"))), PigParallel(3)))
 
     parsing("x = select evid from users") should equal(List(assign))
     parsing("x = select evid from users where evid = 4") should equal(List(assign, filter))
     parsing("x = select evid from users where evid = 4 order by evid desc") should equal(List(assign, filter, order))
-    parsing("x = select evid, uuid from users") should equal(List(PigAssign(PigVar("x"), PigForeach(PigVar("users"), List("evid", "uuid"), PigSchema(List("evid", "uuid"), List("long", "chararray"))))))
-    parsing("x = select evid, uuid from users where evid = 4 order by evid desc") should equal(List(PigAssign(PigVar("x"), PigForeach(PigVar("users"), List("evid", "uuid"), PigSchema(List("evid", "uuid"), List("long", "chararray")))), filter, order))
+    parsing("x = select evid, uuid from users") should equal(List(PigAssign(PigVar("x"), PigForeach(PigVar("users"), PigVars("evid", "uuid"), PigSchema(List("evid", "uuid"), List("long", "chararray"))))))
+    parsing("x = select evid, uuid from users where evid = 4 order by evid desc") should equal(List(PigAssign(PigVar("x"), PigForeach(PigVar("users"), PigVars("evid", "uuid"), PigSchema(List("evid", "uuid"), List("long", "chararray")))), filter, order))
 
     parsing("x = select evid from users wherekey src = 3 and date_created between('2012-15-16', '2012-16-18')") should equal(
       List(PigAssign(PigVar("x"),
@@ -59,28 +63,28 @@ class Wql2PigTests extends Wql2Pig with ShouldMatchers with FlatSpec with WqlPar
   it should "pigify select statements with group" in {
     parsing("x = select evid from users group by evid") should equal(
       List(PigAssign(PigVar("x"), PigGroup(PigVar("users"), List("evid"), PigParallel(3))),
-        PigAssign(PigVar("x"), PigForeach(PigVar("x"), List("evid"), PigSchema(List("evid"), List("long"))))))
+        PigAssign(PigVar("x"), PigForeach(PigVar("x"), PigVars("evid"), PigSchema(List("evid"), List("long"))))))
     parsing("x = select evid from users where evid = 100 group by evid") should equal(
       List(PigAssign(PigVar("x"), PigFilter(PigVar("users"), PigOper("=", PigVar("evid"), PigInt(100)))),
         PigAssign(PigVar("x"), PigGroup(PigVar("x"), List("evid"), PigParallel(3))),
-        PigAssign(PigVar("x"), PigForeach(PigVar("x"), List("evid"), PigSchema(List("evid"), List("long")))))
+        PigAssign(PigVar("x"), PigForeach(PigVar("x"), PigVars("evid"), PigSchema(List("evid"), List("long")))))
     )
     parsing("x = select evid from users group by evid order by evid desc") should equal(
       List(PigAssign(PigVar("x"), PigGroup(PigVar("users"), List("evid"), PigParallel(3))),
-        PigAssign(PigVar("x"), PigForeach(PigVar("x"), List("evid"), PigSchema(List("evid"), List("long")))),
+        PigAssign(PigVar("x"), PigForeach(PigVar("x"), PigVars("evid"), PigSchema(List("evid"), List("long")))),
         PigAssign(PigVar("x"), PigOrder(PigVar("x"), List((PigVar("evid"), PigDirection("desc"))), PigParallel(3))))
     )
 
     parsing("x = select evid from users where evid = 100 group by evid order by evid desc") should equal(
       List(PigAssign(PigVar("x"), PigFilter(PigVar("users"), PigOper("=", PigVar("evid"), PigInt(100)))),
         PigAssign(PigVar("x"), PigGroup(PigVar("x"), List("evid"), PigParallel(3))),
-        PigAssign(PigVar("x"), PigForeach(PigVar("x"), List("evid"), PigSchema(List("evid"), List("long")))),
+        PigAssign(PigVar("x"), PigForeach(PigVar("x"), PigVars("evid"), PigSchema(List("evid"), List("long")))),
         PigAssign(PigVar("x"), PigOrder(PigVar("x"), List((PigVar("evid"), PigDirection("desc"))), PigParallel(3))))
     )
 
     parsing("x = select evid from users group by evid, uuid") should equal(
       List(PigAssign(PigVar("x"), PigGroup(PigVar("users"), List("evid", "uuid"), PigParallel(3))),
-        PigAssign(PigVar("x"), PigForeach(PigVar("x"), List("evid"), PigSchema(List("evid"), List("long"))))))
+        PigAssign(PigVar("x"), PigForeach(PigVar("x"), PigVars("evid"), PigSchema(List("evid"), List("long"))))))
   }
 
   it should "pigify order statements" in {
