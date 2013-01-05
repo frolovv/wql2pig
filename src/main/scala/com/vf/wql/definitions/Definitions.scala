@@ -71,3 +71,5 @@ abstract sealed class WqlAbstractGroup extends WqlExpr
 case class WqlGroup(fields: List[WqlVar]) extends WqlAbstractGroup
 
 case class WqlEmptyGroup() extends WqlAbstractGroup
+
+case class WqlFunc(name : String, args : List[WqlExpr]) extends WqlExpr

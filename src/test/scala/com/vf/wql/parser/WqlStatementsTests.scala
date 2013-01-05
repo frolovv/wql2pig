@@ -154,4 +154,10 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
     parsing("filter users by (evid == 104) and src == 3") should equal(WqlFilter(WqlVar("users"), WqlAnd(WqlOper("==", WqlVar("evid"), WqlInt(104)), WqlOper("==", WqlVar("src"), WqlInt(3)))))
   }
 
+  they should "parse func expressions" in {
+    implicit val parserToTest = this.func
+
+    parsing("convert(date, '2012-12-12', 5)") should equal(WqlFunc("convert", List(WqlVar("date"), WqlString("2012-12-12"), WqlInt(5))))
+  }
+
 }

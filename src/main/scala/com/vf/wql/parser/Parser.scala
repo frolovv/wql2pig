@@ -34,6 +34,8 @@ trait WqlConstants extends util.parsing.combinator.RegexParsers {
     s => WqlVar(s)
   }
   val const: Parser[LiteralWqlExpr] = (boolean | integer | string | wqlnull | failure("couldn't parse constant"))
+
+  val arg: Parser[WqlExpr] = const | ident
 }
 
 trait WqlStatements extends WqlConstants {
@@ -59,6 +61,10 @@ trait WqlStatements extends WqlConstants {
       val mapped = rest map (x => (x._1, x._2))
       WqlJoin((table, column) :: mapped)
     }
+  }
+
+  val func: Parser[WqlFunc] = ident ~ "(" ~ arg ~ opt(("," ~> arg) *) ~ ")" ^^ {
+    case name ~ "(" ~ first ~ rest ~ ")" => WqlFunc(name.name, first :: rest.getOrElse(Nil))
   }
 
   val tableStatement: Parser[WqlExpr] = order | select | join | filter
