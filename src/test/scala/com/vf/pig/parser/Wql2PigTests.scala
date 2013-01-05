@@ -115,7 +115,21 @@ class Wql2PigTests extends Wql2Pig with ShouldMatchers with FlatSpec with WqlPar
       List(PigAssign(PigVar("x"),
         PigLoad(PigVar("wix-bi"), PigWixTableLoader("users", PigKeyFilter("2012-15-16", "2012-16-18", 3),
           PigColumnFilter(PigEmptyCondition()), List("date_created")), PigSchema(List("date_created"), List("long")))),
-        PigAssign(PigVar("x"), PigForeach(PigVar("x"), List(PigUdf("date", List(PigVar("date_created")))), PigSchema(List("date"), List("chararray")))))
+        PigAssign(PigVar("x"), PigForeach(PigVar("x"), List(PigUdf("date", PigVars("date_created"))), PigSchema(List("date"), List("chararray")))))
+    )
+  }
+
+  it should "pigify tbl select statments with complex calculations and group statements" in {
+    parsing("x = select date_created, evid, COUNT(evid) from users wherekey src = 3 and date_created between('2012-15-16', '2012-16-18') group by date_created, evid") should equal(
+      List(PigAssign(PigVar("x"), PigLoad(PigVar("wix-bi"), PigWixTableLoader("users", PigKeyFilter("2012-15-16", "2012-16-18", 3), PigColumnFilter(PigEmptyCondition()), List("date_created", "evid")), PigSchema(List("date_created", "evid"), List("long", "long")))),
+        PigAssign(PigVar("x"), PigGroup(PigVar("x"), PigVars("date_created", "evid"), PigParallel(3))),
+        PigAssign(PigVar("x"), PigForeach(PigVar("x"), List(PigUdf("flatten", PigVars("group")), PigUdf("COUNT", PigVars("evid"))), PigSchema(List("date_created", "evid", "cnt_evid"), List("long", "long", "long")))))
+    )
+
+    parsing("x = select evid, date_created, COUNT(uuid) from users wherekey src = 3 and date_created between('2012-15-16', '2012-16-18') where evid = 100 group by evid, date_created") should equal(
+      List(PigAssign(PigVar("x"), PigLoad(PigVar("wix-bi"), PigWixTableLoader("users", PigKeyFilter("2012-15-16", "2012-16-18", 3), PigColumnFilter(PigOper("=", PigVar("evid"), PigInt(100))), List("evid", "date_created", "uuid")), PigSchema(List("evid", "date_created", "uuid"), List("long", "long", "chararray")))),
+        PigAssign(PigVar("x"), PigGroup(PigVar("x"), PigVars("evid", "date_created"), PigParallel(3))),
+        PigAssign(PigVar("x"), PigForeach(PigVar("x"), List(PigUdf("flatten", PigVars("group")), PigUdf("COUNT", PigVars("uuid"))), PigSchema(List("evid", "date_created", "cnt_uuid"), List("long", "long", "long")))))
     )
   }
 }
