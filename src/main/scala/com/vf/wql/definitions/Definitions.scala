@@ -32,19 +32,13 @@ case class WqlSelectWithGroup(select: WqlAbstractSelect, group: WqlGroup) extend
 
 case class WqlSelectWithTBL(select: WqlAbstractSelect, wherekey: WqlWhereKey) extends WqlAbstractSelect
 
-// case class WqlSelect(columns: List[String], from: WqlVar, whereKey: WqlAbstractWhere, where: WqlAbstractWhere, group: WqlAbstractGroup, order: WqlAbstractOrder) extends WqlExpr
-
 abstract sealed class WqlAbstractWhere extends WqlExpr
 
 case class WqlWhere(condition: WqlCondition) extends WqlAbstractWhere
 
 case class WqlWhereKey(src: String, start: String, end: String) extends WqlAbstractWhere
 
-case class WqlEmptyWhere() extends WqlAbstractWhere
-
 abstract sealed class WqlAbstractOrder extends WqlExpr
-
-case class WqlEmptyOrder() extends WqlAbstractOrder
 
 case class WqlSelectOrder(orders: List[(WqlVar, WqlDirection)]) extends WqlAbstractOrder
 
@@ -70,6 +64,4 @@ abstract sealed class WqlAbstractGroup extends WqlExpr
 
 case class WqlGroup(fields: List[WqlVar]) extends WqlAbstractGroup
 
-case class WqlEmptyGroup() extends WqlAbstractGroup
-
-case class WqlFunc(name : String, args : List[WqlExpr]) extends WqlExpr
+case class WqlFunc(name: String, args: List[WqlExpr]) extends WqlExpr

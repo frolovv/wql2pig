@@ -100,7 +100,6 @@ trait Wql2Pig {
       case WqlVar(x) => PigVar(x)
       case WqlInt(n) => PigInt(n)
       case WqlString(s) => PigString(s)
-      case WqlEmptyWhere() => PigEmptyCondition()
 
       case WqlWhere(condition) => pigify(condition)
       case WqlJoin(tablesAndColumns) => {
