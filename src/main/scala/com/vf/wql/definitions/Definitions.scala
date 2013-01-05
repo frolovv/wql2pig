@@ -6,9 +6,13 @@ package com.vf.wql.definitions
  */
 abstract sealed class WqlExpr
 
-case class WqlVar(name: String) extends WqlExpr
+abstract sealed class WqlEvaluated() extends WqlExpr
 
-abstract sealed class LiteralWqlExpr extends WqlExpr
+case class WqlVar(name: String) extends WqlEvaluated
+
+case class WqlFunc(name: String, args: List[WqlEvaluated]) extends WqlEvaluated
+
+abstract sealed class LiteralWqlExpr extends WqlEvaluated
 
 case class WqlString(str: String) extends LiteralWqlExpr
 
@@ -63,5 +67,3 @@ case class WqlFilter(relation: WqlVar, conditions: WqlCondition) extends WqlExpr
 abstract sealed class WqlAbstractGroup extends WqlExpr
 
 case class WqlGroup(fields: List[WqlVar]) extends WqlAbstractGroup
-
-case class WqlFunc(name: String, args: List[WqlExpr]) extends WqlExpr
