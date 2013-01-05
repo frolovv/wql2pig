@@ -109,4 +109,13 @@ class Wql2PigTests extends Wql2Pig with ShouldMatchers with FlatSpec with WqlPar
       List(PigAssign(PigVar("x"), PigForeach(PigVar("users"), List(PigUdf("date", List(PigVar("date_created")))), PigSchema(List("date"), List("chararray")))))
     )
   }
+
+  it should "pigify tbl select statments with complex calculations" in {
+    parsing("x = select date(date_created) from users wherekey src = 3 and date_created between('2012-15-16', '2012-16-18')") should equal(
+      List(PigAssign(PigVar("x"),
+        PigLoad(PigVar("wix-bi"), PigWixTableLoader("users", PigKeyFilter("2012-15-16", "2012-16-18", 3),
+          PigColumnFilter(PigEmptyCondition()), List("date_created")), PigSchema(List("date_created"), List("long")))),
+        PigAssign(PigVar("x"), PigForeach(PigVar("x"), List(PigUdf("date", List(PigVar("date_created")))), PigSchema(List("date"), List("chararray")))))
+    )
+  }
 }
