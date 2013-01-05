@@ -65,6 +65,18 @@ class Wql2PigTests extends Wql2Pig with ShouldMatchers with FlatSpec with WqlPar
         PigAssign(PigVar("x"), PigGroup(PigVar("x"), List("evid"), PigParallel(3))),
         PigAssign(PigVar("x"), PigForeach(PigVar("x"), List("evid"), PigSchema(List("evid"), List("long")))))
     )
+    parsing("x = select evid from users group by evid order by evid desc") should equal(
+      List(PigAssign(PigVar("x"), PigGroup(PigVar("users"), List("evid"), PigParallel(3))),
+        PigAssign(PigVar("x"), PigForeach(PigVar("x"), List("evid"), PigSchema(List("evid"), List("long")))),
+        PigAssign(PigVar("x"), PigOrder(PigVar("x"), List((PigVar("evid"), PigDirection("desc"))), PigParallel(3))))
+    )
+
+    parsing("x = select evid from users where evid = 100 group by evid order by evid desc") should equal(
+      List(PigAssign(PigVar("x"), PigFilter(PigVar("users"), PigOper("=", PigVar("evid"), PigInt(100)))),
+        PigAssign(PigVar("x"), PigGroup(PigVar("x"), List("evid"), PigParallel(3))),
+        PigAssign(PigVar("x"), PigForeach(PigVar("x"), List("evid"), PigSchema(List("evid"), List("long")))),
+        PigAssign(PigVar("x"), PigOrder(PigVar("x"), List((PigVar("evid"), PigDirection("desc"))), PigParallel(3))))
+    )
   }
 
   it should "pigify order statements" in {
