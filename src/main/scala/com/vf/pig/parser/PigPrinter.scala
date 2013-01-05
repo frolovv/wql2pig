@@ -85,8 +85,7 @@ trait PigPrinter {
 
       case PigUdf(name, exprs) => {
         val values = exprs map pigToString
-        val quoted = values map quote
-        name + "(" + quoted.mkString(",\n\t") + ")"
+        name + "(" + values.mkString(", ") + ")"
       }
 
       case PigJoin(tablesAndColumns) => {
@@ -106,14 +105,11 @@ trait PigPrinter {
       }
 
       case PigWixTableLoader(table, keyFilter, columnFilter, columns) => {
-        val mapped = columns map {
-          case x: String => "event:" + x
-        }
-        val joined = mapped.mkString(" ")
-
+        val mapped = columns map ("event:" + _)
         val withPrefix = addPrefixTo(columnFilter.conditions, "event:")
+        val args = List(PigVar(table), keyFilter, withPrefix, PigVar(mapped.mkString(" ")))
 
-        pigToString(PigUdf("TableLoader", List(PigVar(table), keyFilter, withPrefix, PigVar(joined))))
+        "TableLoader('" + (args map pigToString).mkString("',\n\t'") + "')"
       }
 
       case PigSchema(names, types) =>

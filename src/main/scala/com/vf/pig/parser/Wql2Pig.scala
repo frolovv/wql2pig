@@ -33,8 +33,20 @@ trait Wql2Pig {
     PigSchema(names2, types)
   }
 
+  def getVarsFrom(columns: List[WqlEvaluated]): List[WqlVar] = {
+    val result = ListBuffer[WqlVar]()
+    for (column <- columns) {
+      column match {
+        case x: WqlVar => result += x
+        case WqlFunc(name, args) => result ++= getVarsFrom(args)
+        case _ => {}
+      }
+    }
+    result.toList
+  }
+
   private def emitSelect(selectStmt: WqlAbstractSelect, relation: String): List[Pig] = {
-    var result = new ListBuffer[Pig]()
+    val result = new ListBuffer[Pig]()
 
     selectStmt match {
       case WqlSelect(columns, WqlVar(table)) => {
@@ -77,16 +89,24 @@ trait Wql2Pig {
         }
       }
       case WqlSelectWithTBL(WqlSelect(columns, WqlVar(from)), WqlWhereKey(src, start, end)) => {
-        val flag = columns forall {
+        val onlyVars = columns forall {
           case x: WqlVar => true
           case _ => false
         }
-        if (flag) {
+        if (onlyVars) {
           val mapped = columns map (_.asInstanceOf[WqlVar].name)
           result += PigLoad(PigVar("wix-bi"),
             PigWixTableLoader(from,
               PigKeyFilter(start, end, src.toInt),
               PigColumnFilter(PigEmptyCondition()), mapped), createSchema(columns))
+        } else {
+          val mapped = getVarsFrom(columns)
+          val names = mapped map (_.name)
+          result += PigLoad(PigVar("wix-bi"),
+            PigWixTableLoader(from,
+              PigKeyFilter(start, end, src.toInt),
+              PigColumnFilter(PigEmptyCondition()), names), createSchema(mapped))
+          result += PigForeach(PigVar(relation), columns map pigify, createSchema(columns))
         }
       }
       case WqlSelectWithGroup(select, WqlGroup(fields)) => {

@@ -16,6 +16,8 @@ sealed abstract class AbstractPigUdf extends Pig
 
 case class PigUdf(name: String, exprs: List[Pig]) extends AbstractPigUdf
 
+case class PigUdfWithQuoting(udf : PigUdf) extends AbstractPigUdf
+
 case class PigSchema(names: List[String], types: List[String]) extends Pig
 
 case class PigVar(name: String) extends Pig
