@@ -47,8 +47,15 @@ trait Wql2Pig {
             result += PigFilter(PigVar(relation), pigify(condition))
           }
           case s: WqlSelectWithGroup => {
-            result += PigFilter(PigVar(relation), pigify(condition))
-            result ++= emitSelect(select, relation)
+            val from = s.select.asInstanceOf[WqlSelect].from
+            val filter = PigFilter(PigVar(from.name), pigify(condition))
+            val groupAndRest = emitSelect(select, relation) map {
+              case PigGroup(_, exprs, par) => PigGroup(PigVar(relation), exprs, par)
+              case x => x
+            }
+
+            result += filter
+            result ++= groupAndRest
           }
           case s: WqlSelectWithTBL => {
             val inner = emitSelect(select, relation)
