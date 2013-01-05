@@ -94,7 +94,7 @@ trait WqlStatements extends WqlConstants {
     case cond: WqlCondition => cond
   }
 
-  val where: Parser[WqlAbstractWhere] = "where" ~> condition ^^ (cond => WqlWhere(cond))
+  val where: Parser[WqlWhere] = "where" ~> condition ^^ (cond => WqlWhere(cond))
 
   val wherekey: Parser[WqlAbstractWhere] = (((("wherekey" ~ "src" ~ "=") ~> integer) ~ (("and" ~ "date_created" ~ "between" ~ "(") ~> string) ~ ("," ~> string <~ ")")) | (("wherekey" ~ "src" ~ "=") ~> integer)) ^^ {
     case (src: WqlInt) ~ (start: WqlString) ~ (end: WqlString) => WqlWhereKey(src.value.toString, start.str, end.str)
@@ -116,31 +116,22 @@ trait WqlStatements extends WqlConstants {
   val select: Parser[WqlAbstractSelect] = "select" ~ ident ~ opt(("," ~> ident) *) ~ "from" ~ ident ~ opt(wherekey) ~ opt(where) ~ opt(group) ~ opt(order) ^^ {
     case "select" ~ WqlVar(column) ~ columns ~ "from" ~ relation ~ None ~ whereStmt ~ groupStmt ~ orderStmt => {
       var result: WqlAbstractSelect = WqlSelect(column :: columns.getOrElse(Nil).map(_.name), relation)
-      groupStmt match {
-        case Some(group: WqlGroup) => result = WqlSelectWithGroup(result, group)
-        case None => {}
-      }
-      whereStmt match {
-        case Some(where: WqlWhere) => result = WqlSelectWithWhere(result, where)
-        case None => {}
-      }
-      orderStmt match {
-        case Some(order: WqlSelectOrder) => result = WqlSelectWithOrder(result, order)
-        case None => {}
-      }
+
+      if (groupStmt.isDefined)
+        result = WqlSelectWithGroup(result, groupStmt.get)
+      if (whereStmt.isDefined)
+        result = WqlSelectWithWhere(result, whereStmt.get)
+      if (orderStmt.isDefined)
+        result = WqlSelectWithOrder(result, orderStmt.get.asInstanceOf[WqlSelectOrder])
       result
     }
     case "select" ~ WqlVar(column) ~ columns ~ "from" ~ relation ~ Some(whereKey: WqlWhereKey) ~ whereStmt ~ None ~ orderStmt => {
       var result: WqlAbstractSelect = WqlSelect(column :: columns.getOrElse(Nil).map(_.name), relation)
       result = WqlSelectWithTBL(result, whereKey)
-      whereStmt match {
-        case Some(where: WqlWhere) => result = WqlSelectWithWhere(result, where)
-        case None => {}
-      }
-      orderStmt match {
-        case Some(order: WqlSelectOrder) => result = WqlSelectWithOrder(result, order)
-        case None => {}
-      }
+      if (whereStmt.isDefined)
+        result = WqlSelectWithWhere(result, whereStmt.get)
+      if (orderStmt.isDefined)
+        result = WqlSelectWithOrder(result, orderStmt.get.asInstanceOf[WqlSelectOrder])
       result
     }
   }
