@@ -17,8 +17,8 @@ class Wql2PigTests extends Wql2Pig with ShouldMatchers with FlatSpec with WqlPar
     pigify(wqls)
   }
 
-  def PigVars(vars : String*):List[PigVar] = {
-    vars map (PigVar(_)) toList
+  def PigVars(vars: String*): List[PigVar] = {
+    (vars map (PigVar(_))).toList
   }
 
   "Wql2Pig" should "pigify select statements" in {
@@ -102,5 +102,11 @@ class Wql2PigTests extends Wql2Pig with ShouldMatchers with FlatSpec with WqlPar
 
     parsing("x = filter users by evid is not null") should
       equal(List(PigAssign(PigVar("x"), PigFilter(PigVar("users"), PigOperNull(PigVar("evid"), Some("not"))))))
+  }
+
+  it should "pigify select statments with complex calculations" in {
+    parsing("x = select date(date_created) from users") should equal(
+      List(PigAssign(PigVar("x"), PigForeach(PigVar("users"), List(PigUdf("date", List(PigVar("date_created")))), PigSchema(List("date"), List("chararray")))))
+    )
   }
 }

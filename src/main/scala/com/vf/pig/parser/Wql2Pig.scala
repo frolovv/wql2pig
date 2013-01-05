@@ -113,6 +113,7 @@ trait Wql2Pig {
       case WqlVar(x) => PigVar(x)
       case WqlInt(n) => PigInt(n)
       case WqlString(s) => PigString(s)
+      case WqlFunc(name, args) => PigUdf(name, args map pigify)
 
       case WqlWhere(condition) => pigify(condition)
       case WqlJoin(tablesAndColumns) => {
