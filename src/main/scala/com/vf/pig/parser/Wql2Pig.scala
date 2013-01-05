@@ -21,6 +21,7 @@ trait Wql2Pig {
   private def createSchema(names: List[WqlEvaluated]): PigSchema = {
     val types = names map {
       case (WqlVar(x)) if List("evid", "date_created").contains(x) => "long"
+      case WqlFunc("COUNT", _) => "long"
       case _ => "chararray"
     }
 
@@ -28,6 +29,7 @@ trait Wql2Pig {
       case WqlVar(x) => x
       case WqlString(x) => "string_" + x
       case WqlInt(n) => "int_" + n.toString
+      case WqlFunc("COUNT", List(WqlVar(x))) => "cnt_" + x
       case WqlFunc(name, args) => name
     }
     PigSchema(names2, types)
@@ -66,15 +68,29 @@ trait Wql2Pig {
             result += PigFilter(PigVar(relation), pigify(condition))
           }
           case s: WqlSelectWithGroup => {
-            val from = s.select.asInstanceOf[WqlSelect].from
-            val filter = PigFilter(PigVar(from.name), pigify(condition))
-            val groupAndRest = emitSelect(select, relation) map {
-              case PigGroup(_, exprs, par) => PigGroup(PigVar(relation), exprs, par)
-              case x => x
+            val from = s.select
+            from match {
+              case WqlSelect(columns, tbl) => {
+                val filter = PigFilter(PigVar(tbl.name), pigify(condition))
+                val groupAndRest = emitSelect(select, relation) map {
+                  case PigGroup(_, exprs, par) => PigGroup(PigVar(relation), exprs, par)
+                  case x => x
+                }
+                result += filter
+                result ++= groupAndRest
+              }
+              case x: WqlSelectWithTBL => {
+                val groupAndRest = emitSelect(select, relation) map {
+                  case PigGroup(_, exprs, par) => PigGroup(PigVar(relation), exprs, par)
+                  case PigLoad(what, tbl: PigWixTableLoader, as) => {
+                    PigLoad(what, PigWixTableLoader(tbl.table, tbl.keyFilter, PigColumnFilter(pigify(condition).asInstanceOf[PigCondition]), tbl.columns), as)
+                  }
+                  case y => y
+                  case y => y
+                }
+                result ++= groupAndRest
+              }
             }
-
-            result += filter
-            result ++= groupAndRest
           }
           case s: WqlSelectWithTBL => {
             val inner = emitSelect(select, relation)
@@ -112,10 +128,21 @@ trait Wql2Pig {
       case WqlSelectWithGroup(select, WqlGroup(fields)) => {
         select match {
           case WqlSelect(columns, from) => {
-            val grp = PigGroup(PigVar(from.name), fields map (_.name), PigParallel(3))
+            val grp = PigGroup(PigVar(from.name), fields map pigify, PigParallel(3))
             val slct = WqlSelect(columns, WqlVar(relation))
             result += grp
             result ++= emitSelect(slct, relation)
+          }
+          case WqlSelectWithTBL(WqlSelect(columns, from), whereKey) => {
+            val vars = getVarsFrom(columns).distinct
+            val newSelect = WqlSelectWithTBL(WqlSelect(vars, from), whereKey)
+            result ++= emitSelect(newSelect, relation)
+
+            val grp = PigGroup(PigVar(relation), fields map pigify, PigParallel(3))
+            result += grp
+            val foreach = PigForeach(PigVar(relation), PigUdf("flatten", List(PigVar("group"))) :: (columns filterNot (fields contains)).map(pigify), createSchema(columns))
+            result += foreach
+
           }
         }
       }
