@@ -82,7 +82,8 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
     parsing("select evid from users group by evid") should equal(groupSlct)
     parsing("select evid from users group by evid order by evid desc") should equal(WqlSelectWithOrder(groupSlct, orderStmt))
     parsing("select evid from users where evid = 100 group by evid") should equal(WqlSelectWithWhere(groupSlct, whereStmt))
-    parsing("select evid from users where evid = 100 group by evid order by evid desc") should equal(WqlSelectWithOrder(WqlSelectWithWhere(groupSlct, whereStmt), orderStmt))
+    parsing("select evid from users where evid = 100 group by evid order by evid desc") should
+      equal(WqlSelectWithOrder(WqlSelectWithWhere(groupSlct, whereStmt), orderStmt))
   }
 
   they should "parse select statements with wherekey clause" in {
