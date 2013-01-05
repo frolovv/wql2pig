@@ -96,7 +96,7 @@ trait WqlStatements extends WqlConstants {
 
   val where: Parser[WqlWhere] = "where" ~> condition ^^ (cond => WqlWhere(cond))
 
-  val wherekey: Parser[WqlAbstractWhere] = (((("wherekey" ~ "src" ~ "=") ~> integer) ~ (("and" ~ "date_created" ~ "between" ~ "(") ~> string) ~ ("," ~> string <~ ")")) | (("wherekey" ~ "src" ~ "=") ~> integer)) ^^ {
+  val wherekey: Parser[WqlWhereKey] = (((("wherekey" ~ "src" ~ "=") ~> integer) ~ (("and" ~ "date_created" ~ "between" ~ "(") ~> string) ~ ("," ~> string <~ ")")) | (("wherekey" ~ "src" ~ "=") ~> integer)) ^^ {
     case (src: WqlInt) ~ (start: WqlString) ~ (end: WqlString) => WqlWhereKey(src.value.toString, start.str, end.str)
     case (src: WqlInt) => {
       val fmt = DateTimeFormat.forPattern("yyyy-MM-dd")
@@ -114,24 +114,14 @@ trait WqlStatements extends WqlConstants {
   }
 
   val select: Parser[WqlAbstractSelect] = "select" ~ evaluated ~ opt(("," ~> evaluated) *) ~ "from" ~ ident ~ opt(wherekey) ~ opt(where) ~ opt(group) ~ opt(order) ^^ {
-    case "select" ~ column ~ columns ~ "from" ~ relation ~ None ~ whereStmt ~ groupStmt ~ orderStmt => {
+    case "select" ~ column ~ columns ~ "from" ~ relation ~ whereKeyStmt ~ whereStmt ~ groupStmt ~ orderStmt => {
       var result: WqlAbstractSelect = WqlSelect(column :: columns.getOrElse(Nil), relation)
-
+      if (whereKeyStmt.isDefined)
+        result = WqlSelectWithTBL(result, whereKeyStmt.get)
       if (groupStmt.isDefined)
         result = WqlSelectWithGroup(result, groupStmt.get)
       if (whereStmt.isDefined)
         result = WqlSelectWithWhere(result, whereStmt.get)
-      if (orderStmt.isDefined)
-        result = WqlSelectWithOrder(result, orderStmt.get.asInstanceOf[WqlSelectOrder])
-      result
-    }
-    case "select" ~ column ~ columns ~ "from" ~ relation ~ Some(whereKey: WqlWhereKey) ~ whereStmt ~ groupStmt ~ orderStmt => {
-      var result: WqlAbstractSelect = WqlSelect(column :: columns.getOrElse(Nil), relation)
-      result = WqlSelectWithTBL(result, whereKey)
-      if (whereStmt.isDefined)
-        result = WqlSelectWithWhere(result, whereStmt.get)
-      if (groupStmt.isDefined)
-        result = WqlSelectWithGroup(result, groupStmt.get)
       if (orderStmt.isDefined)
         result = WqlSelectWithOrder(result, orderStmt.get.asInstanceOf[WqlSelectOrder])
       result
