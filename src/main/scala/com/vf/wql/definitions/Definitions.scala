@@ -66,4 +66,4 @@ case class WqlFilter(relation: WqlVar, conditions: WqlCondition) extends WqlExpr
 
 abstract sealed class WqlAbstractGroup extends WqlExpr
 
-case class WqlGroup(fields: List[WqlVar]) extends WqlAbstractGroup
+case class WqlGroup(fields: List[WqlEvaluated]) extends WqlAbstractGroup
