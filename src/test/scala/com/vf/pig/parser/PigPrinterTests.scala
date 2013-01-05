@@ -43,7 +43,7 @@ class PigPrinterTests extends PigPrinter with ShouldMatchers with FlatSpec {
   }
 
   they should "print group statements" in {
-    pigToString(PigGroup(PigVar("events"), List("evid"), PigParallel(6))) should
+    pigToString(PigGroup(PigVar("events"), List(PigVar("evid")), PigParallel(6))) should
       equal("group events by evid parallel 6")
   }
 

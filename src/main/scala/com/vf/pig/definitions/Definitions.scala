@@ -22,7 +22,7 @@ case class PigSchema(names: List[String], types: List[String]) extends Pig
 
 case class PigVar(name: String) extends Pig
 
-case class PigGroup(what: PigVar, exprs: List[String], parallel: PigParallel) extends Pig
+case class PigGroup(what: PigVar, exprs: List[Pig], parallel: PigParallel) extends Pig
 
 case class PigParallel(cnt: Int) extends Pig
 

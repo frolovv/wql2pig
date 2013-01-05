@@ -52,8 +52,8 @@ trait PigPrinter {
       case PigOperNull(field, None) => pigToString(field) + " is null"
 
       case PigGroup(PigVar(name), exprs, par) => exprs match {
-        case field :: Nil => "group " + name + " by " + field + " " + pigToString(par)
-        case _ => "group " + name + " by (" + exprs.mkString(", ") + ") " + pigToString(par)
+        case field :: Nil => "group " + name + " by " + pigToString(field) + " " + pigToString(par)
+        case _ => "group " + name + " by (" + (exprs map pigToString).mkString(", ") + ") " + pigToString(par)
       }
 
       case PigLoad(PigVar(from), udf: AbstractPigUdf, schema: PigSchema) => {
