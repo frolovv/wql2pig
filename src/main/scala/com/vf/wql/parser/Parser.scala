@@ -65,7 +65,7 @@ trait WqlStatements extends WqlConstants {
     case name ~ "(" ~ first ~ rest ~ ")" => WqlFunc(name.name, first :: rest.getOrElse(Nil))
   }
 
-  val evaluated : Parser[WqlEvaluated] = func | ident | const
+  val evaluated: Parser[WqlEvaluated] = func | ident | const
 
   val tableStatement: Parser[WqlExpr] = order | select | join | filter
 
@@ -125,15 +125,18 @@ trait WqlStatements extends WqlConstants {
         result = WqlSelectWithOrder(result, orderStmt.get.asInstanceOf[WqlSelectOrder])
       result
     }
-    case "select" ~ column ~ columns ~ "from" ~ relation ~ Some(whereKey: WqlWhereKey) ~ whereStmt ~ None ~ orderStmt => {
+    case "select" ~ column ~ columns ~ "from" ~ relation ~ Some(whereKey: WqlWhereKey) ~ whereStmt ~ groupStmt ~ orderStmt => {
       var result: WqlAbstractSelect = WqlSelect(column :: columns.getOrElse(Nil), relation)
       result = WqlSelectWithTBL(result, whereKey)
       if (whereStmt.isDefined)
         result = WqlSelectWithWhere(result, whereStmt.get)
+      if (groupStmt.isDefined)
+        result = WqlSelectWithGroup(result, groupStmt.get)
       if (orderStmt.isDefined)
         result = WqlSelectWithOrder(result, orderStmt.get.asInstanceOf[WqlSelectOrder])
       result
     }
+
   }
 }
 
