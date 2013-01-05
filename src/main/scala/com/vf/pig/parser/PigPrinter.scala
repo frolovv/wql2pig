@@ -53,10 +53,7 @@ trait PigPrinter {
 
       case PigGroup(PigVar(name), exprs, par) => exprs match {
         case field :: Nil => "group " + name + " by " + field + " " + pigToString(par)
-        case _ => {
-          val joined = exprs.mkString(", ")
-          "(" + joined + ")"
-        }
+        case _ => "group " + name + " by (" + exprs.mkString(", ") + ") " + pigToString(par)
       }
 
       case PigLoad(PigVar(from), udf: AbstractPigUdf, schema: PigSchema) => {
