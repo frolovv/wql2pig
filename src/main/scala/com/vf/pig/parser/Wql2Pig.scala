@@ -18,12 +18,19 @@ import collection.mutable.ListBuffer
  */
 trait Wql2Pig {
 
-  private def createSchema(names: List[String]): PigSchema = {
+  private def createSchema(names: List[WqlEvaluated]): PigSchema = {
     val types = names map {
-      case x if List("evid", "date_created").contains(x) => "long"
+      case (WqlVar(x)) if List("evid", "date_created").contains(x) => "long"
       case _ => "chararray"
     }
-    PigSchema(names, types)
+
+    val names2 = names map {
+      case WqlVar(x) => x
+      case WqlString(x) => "string_" + x
+      case WqlInt(n) => "int_" + n.toString
+      case WqlFunc(name, args) => name
+    }
+    PigSchema(names2, types)
   }
 
   private def emitSelect(selectStmt: WqlAbstractSelect, relation: String): List[Pig] = {
@@ -31,7 +38,7 @@ trait Wql2Pig {
 
     selectStmt match {
       case WqlSelect(columns, WqlVar(table)) => {
-        result += PigForeach(PigVar(table), columns, createSchema(columns))
+        result += PigForeach(PigVar(table), columns map pigify, createSchema(columns))
       }
       case WqlSelectWithOrder(select, WqlSelectOrder(orders)) => {
         result ++= emitSelect(select, relation)
@@ -70,11 +77,17 @@ trait Wql2Pig {
         }
       }
       case WqlSelectWithTBL(WqlSelect(columns, WqlVar(from)), WqlWhereKey(src, start, end)) => {
-        result += PigLoad(PigVar("wix-bi"),
-          PigWixTableLoader(from,
-            PigKeyFilter(start, end, src.toInt),
-            PigColumnFilter(PigEmptyCondition()), columns),
-          createSchema(columns))
+        val flag = columns forall {
+          case x: WqlVar => true
+          case _ => false
+        }
+        if (flag) {
+          val mapped = columns map (_.asInstanceOf[WqlVar].name)
+          result += PigLoad(PigVar("wix-bi"),
+            PigWixTableLoader(from,
+              PigKeyFilter(start, end, src.toInt),
+              PigColumnFilter(PigEmptyCondition()), mapped), createSchema(columns))
+        }
       }
       case WqlSelectWithGroup(select, WqlGroup(fields)) => {
         select match {
