@@ -167,4 +167,11 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
     parsing("select date(date_created) from users") should equal(WqlSelect(List(WqlFunc("date", List(WqlVar("date_created")))), WqlVar("users")))
   }
 
+  they should "parse tbl select statements with group clause" in {
+    implicit val parserToTest = this.select
+
+    parsing("select evid from users wherekey src = 3 and date_created between('2012-15-16', '2012-16-18') group by evid") should equal(
+      WqlSelectWithGroup(WqlSelectWithTBL(WqlSelect(List(WqlVar("evid")), WqlVar("users")), WqlWhereKey("3", "2012-15-16", "2012-16-18")), WqlGroup(List(WqlVar("evid"))))
+    )
+  }
 }
