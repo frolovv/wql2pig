@@ -36,7 +36,7 @@ trait PigPrinter {
       case PigAssign(PigVar(name), value) => name + " = " + pigToString(value) + semicolumn
 
       case PigForeach(PigVar(relation), columns, as) => {
-        "foreach " + relation + " generate " + columns.mkString(", ") + " as " + pigToString(as)
+        "foreach " + relation + " generate " + (columns map pigToString).mkString(", ") + " as " + pigToString(as)
       }
 
       case PigAnd(left: PigCondition, right: PigCondition) => {
