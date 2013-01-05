@@ -158,6 +158,7 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
     implicit val parserToTest = this.func
 
     parsing("convert(date, '2012-12-12', 5)") should equal(WqlFunc("convert", List(WqlVar("date"), WqlString("2012-12-12"), WqlInt(5))))
+    parsing("convert(date, min('2012-12-12'), 5)") should equal(WqlFunc("convert", List(WqlVar("date"), WqlFunc("min", List(WqlString("2012-12-12"))), WqlInt(5))))
   }
 
 }
