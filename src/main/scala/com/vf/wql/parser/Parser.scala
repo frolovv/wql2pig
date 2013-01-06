@@ -113,8 +113,10 @@ trait WqlStatements extends WqlConstants {
     case relation ~ conditions => WqlFilter(relation, conditions)
   }
 
-  val select: Parser[WqlAbstractSelect] = "select" ~ evaluated ~ opt(("," ~> evaluated) *) ~ "from" ~ ident ~ opt(wherekey) ~ opt(where) ~ opt(group) ~ opt(order) ^^ {
-    case "select" ~ column ~ columns ~ "from" ~ relation ~ whereKeyStmt ~ whereStmt ~ groupStmt ~ orderStmt => {
+  val top: Parser[WqlTop] = "top" ~> integer ^^ (n => WqlTop(n.value))
+
+  val select: Parser[WqlAbstractSelect] = "select" ~ opt(top) ~ evaluated ~ opt(("," ~> evaluated) *) ~ "from" ~ ident ~ opt(wherekey) ~ opt(where) ~ opt(group) ~ opt(order) ^^ {
+    case "select" ~ topStmt ~ column ~ columns ~ "from" ~ relation ~ whereKeyStmt ~ whereStmt ~ groupStmt ~ orderStmt => {
       var result: WqlAbstractSelect = WqlSelect(column :: columns.getOrElse(Nil), relation)
       if (whereKeyStmt.isDefined)
         result = WqlSelectWithTBL(result, whereKeyStmt.get)
@@ -124,6 +126,8 @@ trait WqlStatements extends WqlConstants {
         result = WqlSelectWithWhere(result, whereStmt.get)
       if (orderStmt.isDefined)
         result = WqlSelectWithOrder(result, orderStmt.get.asInstanceOf[WqlSelectOrder])
+      if (topStmt.isDefined)
+        result = WqlSelectWithTop(result, topStmt.get)
       result
     }
 

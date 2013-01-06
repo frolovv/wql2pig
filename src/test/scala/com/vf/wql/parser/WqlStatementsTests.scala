@@ -174,4 +174,12 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
       WqlSelectWithGroup(WqlSelectWithTBL(WqlSelect(List(WqlVar("evid")), WqlVar("users")), WqlWhereKey("3", "2012-15-16", "2012-16-18")), WqlGroup(List(WqlVar("evid"))))
     )
   }
+
+  they should "parse tbl select statements with top clause" in {
+    implicit val parserToTest = this.select
+
+    parsing("select top 1 evid from users") should equal(
+      WqlSelectWithTop(WqlSelect(List(WqlVar("evid")), WqlVar("users")), WqlTop(1))
+    )
+  }
 }

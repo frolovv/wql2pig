@@ -54,6 +54,10 @@ trait Wql2Pig {
       case WqlSelect(columns, WqlVar(table)) => {
         result += PigForeach(PigVar(table), columns map pigify, createSchema(columns))
       }
+      case WqlSelectWithTop(select, WqlTop(n)) => {
+        result ++= emitSelect(select, relation)
+        result += PigLimit(PigVar(relation), n)
+      }
       case WqlSelectWithOrder(select, WqlSelectOrder(orders)) => {
         result ++= emitSelect(select, relation)
         val directions = orders map {

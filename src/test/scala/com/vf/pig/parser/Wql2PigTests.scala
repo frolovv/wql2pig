@@ -32,6 +32,10 @@ class Wql2PigTests extends Wql2Pig with ShouldMatchers with FlatSpec with WqlPar
     parsing("x = select evid, uuid from users") should equal(List(PigAssign(PigVar("x"), PigForeach(PigVar("users"), PigVars("evid", "uuid"), PigSchema(List("evid", "uuid"), List("long", "chararray"))))))
     parsing("x = select evid, uuid from users where evid = 4 order by evid desc") should equal(List(PigAssign(PigVar("x"), PigForeach(PigVar("users"), PigVars("evid", "uuid"), PigSchema(List("evid", "uuid"), List("long", "chararray")))), filter, order))
 
+    parsing("x = select top 10 evid from users") should equal(
+      List(assign, PigAssign(PigVar("x"), PigLimit(PigVar("x"), 10)))
+    )
+
     parsing("x = select evid from users wherekey src = 3 and date_created between('2012-15-16', '2012-16-18')") should equal(
       List(PigAssign(PigVar("x"),
         PigLoad(PigVar("wix-bi"),
