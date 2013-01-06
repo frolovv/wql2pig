@@ -30,7 +30,7 @@ trait Wql2Pig {
       case WqlString(x) => "string_" + x
       case WqlInt(n) => "int_" + n.toString
       case WqlFunc("COUNT", List(WqlVar(x))) => "cnt_" + x
-      case WqlFunc(name, args) => name
+      case WqlFunc(name, args) => name.toLowerCase
     }
     PigSchema(names2, types)
   }
@@ -85,7 +85,6 @@ trait Wql2Pig {
                   case PigLoad(what, tbl: PigWixTableLoader, as) => {
                     PigLoad(what, PigWixTableLoader(tbl.table, tbl.keyFilter, PigColumnFilter(pigify(condition).asInstanceOf[PigCondition]), tbl.columns), as)
                   }
-                  case y => y
                   case y => y
                 }
                 result ++= groupAndRest
@@ -142,7 +141,6 @@ trait Wql2Pig {
             result += grp
             val foreach = PigForeach(PigVar(relation), PigUdf("flatten", List(PigVar("group"))) :: (columns filterNot (fields contains)).map(pigify), createSchema(columns))
             result += foreach
-
           }
         }
       }
