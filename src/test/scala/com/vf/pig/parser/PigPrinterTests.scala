@@ -99,7 +99,10 @@ class PigPrinterTests extends PigPrinter with ShouldMatchers with FlatSpec {
 
   they should "print foreach statements" in {
     pigToString(PigForeach(PigVar("users"), List(PigVar("evid")), PigSchema(List("evid"), List("long")))) should
-      equal("foreach users generate evid as (evid:long)")
+      equal("foreach users generate evid")
+
+    pigToString(PigForeach(PigVar("users"), List(PigUdf("COUNT", List(PigVar("evid")))), PigSchema(List("cnt_evid"), List("long")))) should
+      equal("foreach users generate COUNT(evid) as cnt_evid:long")
   }
 
   they should "print string expressions" in {
