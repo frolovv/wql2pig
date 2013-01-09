@@ -82,15 +82,24 @@ trait WqlStatements extends WqlConstants {
     case left ~ "is" ~ not ~ nullvalue => WqlOperNull(left, not)
   }
 
-  val and: Parser[WqlAnd] = (oper ~ "and" ~ condition) ^^ {
+  val and: Parser[WqlAnd] = ((opernull | in_p | oper) ~ "and" ~ condition) ^^ {
     case cond1 ~ "and" ~ cond2 => WqlAnd(cond1, cond2)
   }
 
-  val or: Parser[WqlOr] = (oper ~ "or" ~ condition) ^^ {
+  val or: Parser[WqlOr] = ((opernull | in_p | oper) ~ "or" ~ condition) ^^ {
     case cond1 ~ "or" ~ cond2 => WqlOr(cond1, cond2)
   }
 
-  val condition: Parser[WqlCondition] = ((and | or | opernull | oper) | ("(" ~> condition <~ ")")) ^^ {
+  val in_p: Parser[WqlCondition] = (ident ~ "in" ~ "(" ~ const ~ (("," ~> const) *) ~ ")") ^^ {
+    case field ~ "in" ~ "(" ~ first ~ rest ~ ")" => {
+      val init = WqlOper("=", field, first)
+      rest.foldLeft(init: WqlCondition) {
+        case (tail, head) => WqlOr(tail, WqlOper("=", field, head))
+      }
+    }
+  }
+
+  val condition: Parser[WqlCondition] = ((and | or | opernull | in_p | oper) | ("(" ~> condition <~ ")")) ^^ {
     case cond: WqlCondition => cond
   }
 

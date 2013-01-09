@@ -182,4 +182,13 @@ class WqlStatementsTests extends WqlStatements with ShouldMatchers with FlatSpec
       WqlSelectWithTop(WqlSelect(List(WqlVar("evid")), WqlVar("users")), WqlTop(1))
     )
   }
+
+  they should "parse in statements" in {
+    implicit val parserToTest = this.in_p
+
+    parsing("evid in (101)") should equal(WqlOper("=", WqlVar("evid"), WqlInt(101)))
+    parsing("evid in (101, 102)") should equal(WqlOr(WqlOper("=", WqlVar("evid"), WqlInt(101)), WqlOper("=", WqlVar("evid"), WqlInt(102))))
+
+
+  }
 }
